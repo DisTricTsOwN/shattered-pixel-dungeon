@@ -25,6 +25,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
+import com.shatteredpixel.shatteredpixeldungeon.devtools.DevTools;
 import com.shatteredpixel.shatteredpixeldungeon.messages.Messages;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.HeroSelectScene;
@@ -60,6 +61,17 @@ public class WndGame extends Window {
 			}
 		});
 		curBtn.icon(Icons.get(Icons.PREFS));
+
+		// Developer tools, available only in development builds
+if (DevTools.isEnabled()) {
+    addButton(curBtn = new RedButton("Developer Tools") {
+        @Override
+       protected void onClick() {
+    hide();
+    GameScene.show(new WndDevTools());
+}
+    });
+}
 
 		// Challenges window
 		if (Dungeon.challenges > 0) {

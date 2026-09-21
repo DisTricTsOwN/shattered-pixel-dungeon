@@ -19,6 +19,7 @@ tasks.register('debug', JavaExec) {
     ignoreExitValue = true
 
     mainClass = appMainClass
+    systemProperty 'district.devtools', 'true'
     systemProperty 'Specification-Title', appName
     systemProperty 'Implementation-Title', appPackageName
     systemProperty 'Specification-Version', appVersionName + "-INDEV"
