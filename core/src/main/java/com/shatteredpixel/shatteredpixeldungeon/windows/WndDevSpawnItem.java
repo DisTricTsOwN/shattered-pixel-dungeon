@@ -17,7 +17,8 @@ public class WndDevSpawnItem extends WndOptions {
             "Seeds",
             "Scrolls",
             "Runestones",
-            "Trinkets"
+            "Trinkets",
+            "Back"
     };
 
     private static final Generator.Category[] CATEGORIES = {
@@ -45,6 +46,10 @@ public class WndDevSpawnItem extends WndOptions {
 
    @Override
 protected void onSelect(int index) {
+    if (index == CATEGORIES.length) {
+    GameScene.show(new WndDevTools());
+    return;
+}
 
     if (index < 0 || index >= CATEGORIES.length) {
         return;
@@ -53,73 +58,89 @@ protected void onSelect(int index) {
     Generator.Category category = CATEGORIES[index];
 
     if (category == Generator.Category.WEAPON) {
-
-        GameScene.show(new WndOptions(
-                "Weapons",
-                "Select a weapon tier:",
-                "Tier 1",
-                "Tier 2",
-                "Tier 3",
-                "Tier 4",
-                "Tier 5"
-        ) {
-            @Override
-            protected void onSelect(int tier) {
-
-                Generator.Category[] weaponTiers = {
-                        Generator.Category.WEP_T1,
-                        Generator.Category.WEP_T2,
-                        Generator.Category.WEP_T3,
-                        Generator.Category.WEP_T4,
-                        Generator.Category.WEP_T5
-                };
-
-                if (tier >= 0 && tier < weaponTiers.length) {
-                    GameScene.show(
-                            new WndDevSpawnCategory(weaponTiers[tier])
-                    );
-                }
-            }
-        });
-
-        return;
-    }
+    GameScene.show(createWeaponTierMenu());
+    return;
+}
     
 
 
-    if (category == Generator.Category.MISSILE) {
-
-        GameScene.show(new WndOptions(
-                "Missile Weapons",
-                "Select a missile weapon tier:",
-                "Tier 1",
-                "Tier 2",
-                "Tier 3",
-                "Tier 4",
-                "Tier 5"
-        ) {
-            @Override
-            protected void onSelect(int tier) {
-
-                Generator.Category[] missileTiers = {
-                        Generator.Category.MIS_T1,
-                        Generator.Category.MIS_T2,
-                        Generator.Category.MIS_T3,
-                        Generator.Category.MIS_T4,
-                        Generator.Category.MIS_T5
-                };
-
-                if (tier >= 0 && tier < missileTiers.length) {
-                    GameScene.show(
-                            new WndDevSpawnCategory(missileTiers[tier])
-                    );
-                }
-            }
-        });
-
-        return;
-    }
+   if (category == Generator.Category.MISSILE) {
+    GameScene.show(createMissileTierMenu());
+    return;
+}
 
     GameScene.show(new WndDevSpawnCategory(category));
+}
+public static WndOptions createWeaponTierMenu() {
+
+    return new WndOptions(
+            "Weapons",
+            "Select a weapon tier:",
+            "Tier 1",
+            "Tier 2",
+            "Tier 3",
+            "Tier 4",
+            "Tier 5",
+            "Back"
+    ) {
+        @Override
+        protected void onSelect(int tier) {
+
+            Generator.Category[] weaponTiers = {
+                    Generator.Category.WEP_T1,
+                    Generator.Category.WEP_T2,
+                    Generator.Category.WEP_T3,
+                    Generator.Category.WEP_T4,
+                    Generator.Category.WEP_T5
+            };
+
+            if (tier == weaponTiers.length) {
+                GameScene.show(new WndDevSpawnItem());
+                return;
+            }
+
+            if (tier >= 0 && tier < weaponTiers.length) {
+                GameScene.show(
+                        new WndDevSpawnCategory(weaponTiers[tier], true)
+                );
+            }
+        }
+    };
+}
+public static WndOptions createMissileTierMenu() {
+
+    return new WndOptions(
+            "Missile Weapons",
+            "Select a missile weapon tier:",
+            "Tier 1",
+            "Tier 2",
+            "Tier 3",
+            "Tier 4",
+            "Tier 5",
+            "Back"
+    ) {
+        @Override
+        protected void onSelect(int tier) {
+
+            Generator.Category[] missileTiers = {
+                    Generator.Category.MIS_T1,
+                    Generator.Category.MIS_T2,
+                    Generator.Category.MIS_T3,
+                    Generator.Category.MIS_T4,
+                    Generator.Category.MIS_T5
+            };
+
+            if (tier == missileTiers.length) {
+                GameScene.show(new WndDevSpawnItem());
+                return;
+            }
+
+            if (tier >= 0 && tier < missileTiers.length) {
+                GameScene.show(
+                        new WndDevSpawnCategory(missileTiers[tier], true)
+                );
+            }
+        }
+    };
 }
 }

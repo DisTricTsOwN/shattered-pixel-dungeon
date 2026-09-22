@@ -7,22 +7,27 @@ import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.utils.Reflection;
 
 public class WndDevSpawnCategory extends WndOptions {
-
-    private final Generator.Category category;
+        private final Generator.Category category;
+    private final boolean tiered;
 
     public WndDevSpawnCategory(Generator.Category category) {
-        super(
-                "Spawn Item",
-                "Select an item:",
-                getItemNames(category)
-        );
+    this(category, false);
+}
 
-        this.category = category;
-    }
+public WndDevSpawnCategory(Generator.Category category, boolean tiered) {
+    super(
+            "Spawn Item",
+            "Select an item:",
+            getItemNames(category)
+    );
+
+    this.category = category;
+    this.tiered = tiered;
+}
 
     private static String[] getItemNames(Generator.Category category) {
 
-        String[] names = new String[category.classes.length];
+        String[] names = new String[category.classes.length + 1];
 
         for (int i = 0; i < category.classes.length; i++) {
 
@@ -38,16 +43,41 @@ Item item = Reflection.newInstance(itemClass);
                 names[i] = category.classes[i].getSimpleName();
             }
         }
+        names[category.classes.length] = "Back";
 
         return names;
     }
 
     @Override
-    protected void onSelect(int index) {
+protected void onSelect(int index) {
 
-        if (index < 0 || index >= category.classes.length) {
-            return;
+    if (index == category.classes.length) {
+
+    if (tiered) {
+
+        boolean weaponTier =
+                category == Generator.Category.WEP_T1 ||
+                category == Generator.Category.WEP_T2 ||
+                category == Generator.Category.WEP_T3 ||
+                category == Generator.Category.WEP_T4 ||
+                category == Generator.Category.WEP_T5;
+
+        if (weaponTier) {
+            GameScene.show(WndDevSpawnItem.createWeaponTierMenu());
+        } else {
+            GameScene.show(WndDevSpawnItem.createMissileTierMenu());
         }
+
+    } else {
+        GameScene.show(new WndDevSpawnItem());
+    }
+
+    return;
+}
+
+    if (index < 0 || index >= category.classes.length) {
+        return;
+    }
 
         @SuppressWarnings("unchecked")
 Class<? extends Item> itemClass =

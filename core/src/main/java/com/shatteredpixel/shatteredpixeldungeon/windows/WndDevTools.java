@@ -100,7 +100,13 @@ public class WndDevTools extends Window {
         GameScene.show(new WndDevSpawnItem());
     }
 });
-        
+                addButton(new RedButton("Back") {
+            @Override
+            protected void onClick() {
+                hide();
+                GameScene.show(new WndGame());
+            }
+        });
         resize(WIDTH, pos);
     }
 
