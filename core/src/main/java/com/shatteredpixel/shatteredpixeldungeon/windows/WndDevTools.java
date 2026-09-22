@@ -6,6 +6,9 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
+import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Zombie;
+import com.watabou.utils.PathFinder;
 
 public class WndDevTools extends Window {
 
@@ -91,7 +94,47 @@ public class WndDevTools extends Window {
         GameScene.updateFog();
         GLog.p("Map revealed.");
     }
-});     
+});    
+
+addButton(new RedButton("Spawn Zombie") {
+    @Override
+    protected void onClick() {
+
+        if (Dungeon.hero == null || Dungeon.level == null) {
+            GLog.w("Unable to spawn zombie.");
+            return;
+        }
+
+        Zombie zombie = new Zombie();
+        int spawnPos = -1;
+
+        for (int offset : PathFinder.NEIGHBOURS8) {
+
+            int cell = Dungeon.hero.pos + offset;
+
+            if (cell >= 0
+                    && cell < Dungeon.level.length()
+                    && Dungeon.level.passable[cell]
+                    && Actor.findChar(cell) == null) {
+
+                spawnPos = cell;
+                break;
+            }
+        }
+
+        if (spawnPos == -1) {
+            GLog.w("No open space near the player.");
+            return;
+        }
+
+        zombie.pos = spawnPos;
+        zombie.state = zombie.WANDERING;
+
+        GameScene.add(zombie);
+
+        GLog.p("Zombie spawned.");
+    }
+});
         
         addButton(new RedButton("Spawn Item") {
     @Override
