@@ -1,5 +1,6 @@
 package com.shatteredpixel.shatteredpixeldungeon.windows;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
@@ -60,6 +61,46 @@ public class WndDevTools extends Window {
             }
         });
 
+       addButton(new RedButton("Heal Player") {
+    @Override
+    protected void onClick() {
+        if (Dungeon.hero != null && Dungeon.hero.isAlive()) {
+            Dungeon.hero.HP = Dungeon.hero.HT;
+            GLog.p("Player fully healed.");
+        }
+    }
+}); 
+        
+   addButton(new RedButton("Reveal Map") {
+    @Override
+    protected void onClick() {
+
+        if (Dungeon.level == null) {
+            return;
+        }
+
+        int length = Dungeon.level.length();
+
+        for (int i = 0; i < length; i++) {
+            if (Dungeon.level.discoverable[i]) {
+                Dungeon.level.mapped[i] = true;
+                Dungeon.level.discover(i);
+            }
+        }
+
+        GameScene.updateFog();
+        GLog.p("Map revealed.");
+    }
+});     
+        
+        addButton(new RedButton("Spawn Item") {
+    @Override
+    protected void onClick() {
+        hide();
+        GameScene.show(new WndDevSpawnItem());
+    }
+});
+        
         resize(WIDTH, pos);
     }
 
