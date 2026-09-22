@@ -8,6 +8,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.items.firearms.Pistol;
+import com.shatteredpixel.shatteredpixeldungeon.items.firearms.Ammo9mm;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Zombie;
 import com.watabou.utils.PathFinder;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ZombieNoise;
@@ -149,6 +150,22 @@ addButton(new RedButton("Spawn Pistol") {
         } else {
             Dungeon.level.drop(pistol, Dungeon.hero.pos).sprite.drop();
             GLog.w("Inventory full. Pistol dropped at your feet.");
+        }
+    }
+});
+
+addButton(new RedButton("Spawn 9mm Ammo") {
+    @Override
+    protected void onClick() {
+
+        Ammo9mm ammo = new Ammo9mm();
+        ammo.quantity(30);
+
+        if (ammo.collect()) {
+            GLog.p("30 rounds of 9mm ammo added to inventory.");
+        } else {
+            Dungeon.level.drop(ammo, Dungeon.hero.pos).sprite.drop();
+            GLog.w("Inventory full. 9mm ammo dropped at your feet.");
         }
     }
 });

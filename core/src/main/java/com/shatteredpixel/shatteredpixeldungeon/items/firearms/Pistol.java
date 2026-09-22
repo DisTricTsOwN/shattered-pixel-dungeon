@@ -17,6 +17,7 @@ import com.watabou.utils.Random;
 public class Pistol extends Item {
 
     public static final String AC_FIRE = "FIRE";
+    public static final String AC_RELOAD = "RELOAD";
     private static final int MAGAZINE_CAPACITY = 10;
 
 private int roundsLoaded = MAGAZINE_CAPACITY;
@@ -32,23 +33,56 @@ private static final String ROUNDS_LOADED = "rounds_loaded";
         ArrayList<String> actions = super.actions(hero);
 
         actions.add(AC_FIRE);
+        actions.add(AC_RELOAD);
 
         return actions;
     }
 
     @Override
-    public void execute(Hero hero, String action) {
+public void execute(Hero hero, String action) {
 
-        if (action.equals(AC_FIRE)) {
-            curUser = hero;
-            curItem = this;
+    if (action.equals(AC_FIRE)) {
 
-            GameScene.selectCell(shooter);
+        curUser = hero;
+        curItem = this;
+        GameScene.selectCell(shooter);
 
-        } else {
-            super.execute(hero, action);
+    } else if (action.equals(AC_RELOAD)) {
+
+        if (roundsLoaded >= MAGAZINE_CAPACITY) {
+            GLog.w("The pistol is already fully loaded.");
+            return;
         }
+
+        Ammo9mm ammo = hero.belongings.getItem(Ammo9mm.class);
+
+        if (ammo == null || ammo.quantity() <= 0) {
+            GLog.w("You have no 9mm ammo.");
+            return;
+        }
+
+        int roundsNeeded = MAGAZINE_CAPACITY - roundsLoaded;
+        int roundsToLoad = Math.min(roundsNeeded, ammo.quantity());
+
+        roundsLoaded += roundsToLoad;
+
+        if (roundsToLoad < ammo.quantity()) {
+            ammo.quantity(ammo.quantity() - roundsToLoad);
+        } else {
+            ammo.detachAll(hero.belongings.backpack);
+        }
+
+        GLog.p("Pistol reloaded: "
+                + roundsLoaded + "/" + MAGAZINE_CAPACITY
+                + " rounds.");
+
+        hero.spendAndNext(Actor.TICK);
+
+    } else {
+
+        super.execute(hero, action);
     }
+}
 
     private final CellSelector.Listener shooter = new CellSelector.Listener() {
 
