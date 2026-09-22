@@ -7,9 +7,10 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
-import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
+
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Zombie;
 import com.watabou.utils.PathFinder;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ZombieNoise;
 
 public class WndDevTools extends Window {
 
@@ -145,21 +146,12 @@ addButton(new RedButton("Make Noise") {
             return;
         }
 
-        int noisePos = Dungeon.hero.pos;
-        int zombiesAlerted = 0;
-
-        for (Char ch : Actor.chars()) {
-            if (ch instanceof Zombie) {
-                Zombie zombie = (Zombie) ch;
-                zombie.hearNoise(noisePos);
-                zombiesAlerted++;
-            }
-        }
+        int zombiesAlerted = ZombieNoise.makeNoise(Dungeon.hero.pos, 6f);
 
         if (zombiesAlerted > 0) {
             GLog.p("Noise made. Zombies investigating: " + zombiesAlerted);
         } else {
-            GLog.w("Noise made, but no zombies are present.");
+            GLog.w("Noise made, but no zombies heard it.");
         }
     }
 });
