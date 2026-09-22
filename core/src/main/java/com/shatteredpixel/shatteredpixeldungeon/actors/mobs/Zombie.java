@@ -29,6 +29,15 @@ public class Zombie extends Mob {
         state = WANDERING;
     }
 
+        public void hearNoise(int cell) {
+
+        if (state == HUNTING || state == FLEEING) {
+            return;
+        }
+
+        target = cell;
+        state = INVESTIGATING;
+    }
     @Override
     public int damageRoll() {
         return Random.NormalIntRange(2, 5);
