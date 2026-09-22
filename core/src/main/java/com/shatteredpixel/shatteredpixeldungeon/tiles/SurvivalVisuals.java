@@ -10,12 +10,14 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.tiles;
 
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.watabou.utils.PointF;
+
 /**
- * Shared visual-scale settings for the survival rendering prototype.
+ * Shared visual-scale settings and coordinate conversions
+ * for the survival presentation layer.
  *
- * Gameplay continues to use the existing logical dungeon cells.
- * CELL_SIZE controls how large one logical cell appears in the
- * survival presentation layer.
+ * Gameplay continues to operate on logical level cells.
  */
 public final class SurvivalVisuals {
 
@@ -23,5 +25,24 @@ public final class SurvivalVisuals {
 
     private SurvivalVisuals() {
         // Utility class.
+    }
+
+    public static PointF cellToWorld( int cell ) {
+        return new PointF(
+                cell % Dungeon.level.width(),
+                cell / Dungeon.level.width()
+        ).scale( CELL_SIZE );
+    }
+
+    public static PointF cellCenterToWorld( int cell ) {
+        return new PointF(
+                (cell % Dungeon.level.width() + 0.5f) * CELL_SIZE,
+                (cell / Dungeon.level.width() + 0.5f) * CELL_SIZE
+        );
+    }
+
+    public static int worldToCell( float x, float y ) {
+        return (int)(x / CELL_SIZE)
+                + (int)(y / CELL_SIZE) * Dungeon.level.width();
     }
 }

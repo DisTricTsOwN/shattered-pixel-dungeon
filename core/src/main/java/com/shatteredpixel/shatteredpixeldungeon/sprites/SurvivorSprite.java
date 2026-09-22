@@ -11,7 +11,12 @@
 package com.shatteredpixel.shatteredpixeldungeon.sprites;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalVisuals;
+import com.watabou.noosa.Camera;
 import com.watabou.noosa.TextureFilm;
+import com.watabou.utils.PointF;
 
 public class SurvivorSprite extends HeroSprite {
 
@@ -43,5 +48,25 @@ public class SurvivorSprite extends HeroSprite {
         operate = idle.clone();
 
         play( idle );
+    }
+
+    @Override
+    public PointF worldToCamera( int cell ) {
+
+        final int csize = SurvivalVisuals.CELL_SIZE;
+
+        return new PointF(
+                PixelScene.align(
+                        Camera.main,
+                        ((cell % Dungeon.level.width()) + 0.5f) * csize
+                                - width() * 0.5f
+                ),
+                PixelScene.align(
+                        Camera.main,
+                        ((cell / Dungeon.level.width()) + 1.0f) * csize
+                                - height()
+                                - csize * perspectiveRaise
+                )
+        );
     }
 }
