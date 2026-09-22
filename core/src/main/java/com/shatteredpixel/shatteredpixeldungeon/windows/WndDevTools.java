@@ -7,7 +7,7 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
-
+import com.shatteredpixel.shatteredpixeldungeon.items.firearms.Pistol;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Zombie;
 import com.watabou.utils.PathFinder;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.ZombieNoise;
@@ -135,6 +135,21 @@ addButton(new RedButton("Spawn Zombie") {
         GameScene.add(zombie);
 
         GLog.p("Zombie spawned.");
+    }
+});
+
+addButton(new RedButton("Spawn Pistol") {
+    @Override
+    protected void onClick() {
+
+        Pistol pistol = new Pistol();
+
+        if (pistol.collect()) {
+            GLog.p("Pistol added to inventory.");
+        } else {
+            Dungeon.level.drop(pistol, Dungeon.hero.pos).sprite.drop();
+            GLog.w("Inventory full. Pistol dropped at your feet.");
+        }
     }
 });
 
