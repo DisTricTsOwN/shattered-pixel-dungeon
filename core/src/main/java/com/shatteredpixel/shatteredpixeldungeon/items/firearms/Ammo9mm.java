@@ -1,12 +1,14 @@
 package com.shatteredpixel.shatteredpixeldungeon.items.firearms;
 
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 
 public class Ammo9mm extends Item {
 
     {
-        stackable = true;
-    }
+    image = ItemSpriteSheet.AMMO_9MM;
+    stackable = true;
+}
 
     @Override
     public String name() {

@@ -2,6 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.items.firearms;
 
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.watabou.utils.Bundle;
@@ -24,9 +25,11 @@ private int roundsLoaded = MAGAZINE_CAPACITY;
 private static final String ROUNDS_LOADED = "rounds_loaded";
 
     {
-        defaultAction = AC_FIRE;
-        usesTargeting = true;
-    }
+    image = ItemSpriteSheet.PISTOL;
+
+    defaultAction = AC_FIRE;
+    usesTargeting = true;
+}
 
     @Override
     public ArrayList<String> actions(Hero hero) {

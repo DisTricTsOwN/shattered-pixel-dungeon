@@ -395,8 +395,14 @@ public class ItemSpriteSheet {
 		assignItemRect(ARMOR_CLERIC,    13, 14);
 	}
 
-	                                                                                    //16 free slots
+private static final int FIREARMS = xy(1, 13);  //16 slots
+public static final int PISTOL    = FIREARMS+0;
+public static final int AMMO_9MM  = FIREARMS+1;
 
+static {
+    assignItemRect(PISTOL,   16, 16);
+    assignItemRect(AMMO_9MM, 16, 16);
+}
 	private static final int WANDS              =                           xy(1, 14);  //16 slots
 	public static final int WAND_MAGIC_MISSILE  = WANDS+0;
 	public static final int WAND_FIREBOLT       = WANDS+1;
@@ -923,7 +929,7 @@ public class ItemSpriteSheet {
 			assignIconRect( SCROLL_METAMORPH,   7, 7 );
 		}
 
-		                                                                                //16 free slots
+		    //16 free slots
 
 		private static final int POTIONS        =                            xy(1, 6);  //16 slots
 		public static final int POTION_STRENGTH = POTIONS+0;
