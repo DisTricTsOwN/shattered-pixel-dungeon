@@ -4,7 +4,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
-
+import com.watabou.utils.Bundle;
 import java.util.ArrayList;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
@@ -17,6 +17,10 @@ import com.watabou.utils.Random;
 public class Pistol extends Item {
 
     public static final String AC_FIRE = "FIRE";
+    private static final int MAGAZINE_CAPACITY = 10;
+
+private int roundsLoaded = MAGAZINE_CAPACITY;
+private static final String ROUNDS_LOADED = "rounds_loaded";
 
     {
         defaultAction = AC_FIRE;
@@ -55,6 +59,13 @@ public class Pistol extends Item {
                 return;
             }
 
+            if (roundsLoaded <= 0) {
+    GLog.w("The pistol is empty.");
+    return;
+}
+
+roundsLoaded--;
+
             Ballistica shot = new Ballistica(
         curUser.pos,
         target,
@@ -73,11 +84,13 @@ if (enemy != null && enemy != curUser) {
 
     enemy.damage(damage, Pistol.this);
 
-    GLog.p("Pistol hit for " + damage + " damage.");
+    GLog.p("Pistol hit for " + damage + " damage. "
+        + roundsLoaded + "/" + MAGAZINE_CAPACITY + " rounds.");
 
 } else {
 
-    GLog.w("Pistol shot missed.");
+    GLog.w("Pistol shot missed. "
+        + roundsLoaded + "/" + MAGAZINE_CAPACITY + " rounds.");
 }
 
 // Prototype firing speed.
@@ -90,4 +103,23 @@ curUser.spendAndNext(Actor.TICK);
             return "Select a target";
         }
     };
+
+        
+
+    @Override
+    public void storeInBundle(Bundle bundle) {
+        super.storeInBundle(bundle);
+        bundle.put(ROUNDS_LOADED, roundsLoaded);
+    }
+
+    @Override
+    public void restoreFromBundle(Bundle bundle) {
+        super.restoreFromBundle(bundle);
+
+        if (bundle.contains(ROUNDS_LOADED)) {
+            roundsLoaded = bundle.getInt(ROUNDS_LOADED);
+        } else {
+            roundsLoaded = MAGAZINE_CAPACITY;
+        }
+    }
 }
