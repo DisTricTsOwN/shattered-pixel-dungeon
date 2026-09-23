@@ -66,16 +66,19 @@ private void buildPrototype() {
     house.scale.set(0.25f);
 
     /*
-     * Anchor the artwork around the existing 10x6-cell
-     * logical house footprint.
-     */
-    house.x = footprintX() - 32;
+ * Temporary positioning controls for aligning the
+ * detailed artwork with the logical house footprint.
+ */
+float houseOffsetX = -32f;
+float houseOffsetY = 32f;
 
-    house.y =
-            footprintY()
-                    + footprintHeight()
-                    - house.height * house.scale.y
-                    + 32;
+house.x = footprintX() + houseOffsetX;
+
+house.y =
+        footprintY()
+                + footprintHeight()
+                - house.height * house.scale.y
+                + houseOffsetY;
 
     upperStructure.add(house);
 }
