@@ -13,6 +13,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTerrain;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalBuilding;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalHouseCollision;
 
 public class SurvivalTestLevel extends Level {
 
@@ -31,6 +32,15 @@ public int[] survivalBuilding() {
 
 private void setSurvivalBuilding(int x, int y, int building) {
     survivalBuilding[cell(x, y)] = building;
+}
+private int[] survivalHouseCollision;
+
+public int[] survivalHouseCollision() {
+    return survivalHouseCollision;
+}
+
+private void setSurvivalHouseCollision(int x, int y, int collision) {
+    survivalHouseCollision[cell(x, y)] = collision;
 }
 
 private void fillSurvivalBuildingRect(int x, int y, int w, int h, int building) {
@@ -75,6 +85,7 @@ private void fillSurvivalRect(int x, int y, int w, int h, int terrain) {
         setSize(MAP_WIDTH, MAP_HEIGHT);
         survivalTerrain = new int[length()];
         survivalBuilding = new int[length()];
+        survivalHouseCollision = new int[length()];
 
 // Grass is the default outdoor surface.
 for (int i = 0; i < survivalTerrain.length; i++) {
@@ -224,7 +235,34 @@ fillSurvivalRect(
             }
         }
     }
+@Override
+public void buildFlagMaps() {
 
+    super.buildFlagMaps();
+
+    if (survivalHouseCollision == null) {
+        return;
+    }
+
+    for (int i = 0; i < survivalHouseCollision.length; i++) {
+
+        switch (survivalHouseCollision[i]) {
+
+            case SurvivalHouseCollision.SOLID:
+            case SurvivalHouseCollision.WINDOW:
+            case SurvivalHouseCollision.PROP:
+                passable[i] = false;
+                solid[i] = true;
+                break;
+
+            case SurvivalHouseCollision.WALKABLE:
+            case SurvivalHouseCollision.DOOR:
+                passable[i] = true;
+                solid[i] = false;
+                break;
+        }
+    }
+}
     @Override
     public Mob createMob() {
         return null;
