@@ -1,0 +1,81 @@
+/*
+ * Shattered Pixel Dungeon
+ * Survival prototype
+ */
+
+package com.shatteredpixel.shatteredpixeldungeon.tiles;
+
+import com.watabou.noosa.Group;
+
+public class SurvivalHouse extends Group {
+
+    // Logical footprint of the current test house.
+    public static final int HOUSE_X = 4;
+    public static final int HOUSE_Y = 3;
+    public static final int HOUSE_WIDTH = 10;
+    public static final int HOUSE_HEIGHT = 6;
+
+    private final Group lowerStructure;
+    private final Group upperStructure;
+    private final Group roof;
+
+    public SurvivalHouse() {
+
+        super();
+
+        /*
+         * LOWER STRUCTURE
+         *
+         * Foundation, floor, lower walls, porch, etc.
+         * These can remain visible when the player enters.
+         */
+        lowerStructure = new Group();
+        add(lowerStructure);
+
+        /*
+         * UPPER STRUCTURE
+         *
+         * Exterior wall faces, windows, trim and other
+         * raised portions of the building.
+         */
+        upperStructure = new Group();
+        add(upperStructure);
+
+        /*
+         * ROOF
+         *
+         * Kept completely separate so it can later fade
+         * or disappear when the Survivor enters the house.
+         */
+        roof = new Group();
+        add(roof);
+    }
+
+    public float footprintX() {
+        return HOUSE_X * SurvivalVisuals.CELL_SIZE;
+    }
+
+    public float footprintY() {
+        return HOUSE_Y * SurvivalVisuals.CELL_SIZE;
+    }
+
+    public float footprintWidth() {
+        return HOUSE_WIDTH * SurvivalVisuals.CELL_SIZE;
+    }
+
+    public float footprintHeight() {
+        return HOUSE_HEIGHT * SurvivalVisuals.CELL_SIZE;
+    }
+
+    public Group lowerStructure() {
+        return lowerStructure;
+    }
+
+    public Group upperStructure() {
+        return upperStructure;
+    }
+
+    public Group roof() {
+        return roof;
+    }
+}

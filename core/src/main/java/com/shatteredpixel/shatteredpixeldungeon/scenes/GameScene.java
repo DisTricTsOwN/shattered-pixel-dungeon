@@ -89,6 +89,7 @@ import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalBuildingTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalStructureLayer;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalHouse;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTileSheet;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonWallsTilemap;
@@ -306,6 +307,12 @@ public class GameScene extends PixelScene {
     SurvivalStructureLayer survivalStructures =
             new SurvivalStructureLayer();
     terrain.add(survivalStructures);
+	// Complete survival house renderer.
+// Individual roof/wall components will be added to this object.
+SurvivalHouse survivalHouse =
+        new SurvivalHouse();
+
+terrain.add(survivalHouse);
 
 } else {
     terrain.add(tiles);
