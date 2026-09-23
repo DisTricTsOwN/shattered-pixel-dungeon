@@ -8,23 +8,24 @@ package com.shatteredpixel.shatteredpixeldungeon.tiles;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.watabou.noosa.TextureFilm;
 import com.watabou.noosa.Tilemap;
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
 
 public class SurvivalTilemap extends Tilemap {
 
     private static final int FLOOR_TILE = 0;
 
-    public SurvivalTilemap(String texture) {
-        super(
-                texture,
-                new TextureFilm(
-                        texture,
-                        SurvivalVisuals.CELL_SIZE,
-                        SurvivalVisuals.CELL_SIZE
-                )
-        );
+    public SurvivalTilemap() {
+    super(
+            Assets.Environment.TILES_SURVIVAL_TEST,
+            new TextureFilm(
+                    Assets.Environment.TILES_SURVIVAL_TEST,
+                    SurvivalVisuals.CELL_SIZE,
+                    SurvivalVisuals.CELL_SIZE
+            )
+    );
 
-        buildMap();
-    }
+    buildMap();
+}
 
     private void buildMap() {
 

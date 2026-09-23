@@ -85,6 +85,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTileSheet;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonWallsTilemap;
@@ -165,7 +166,8 @@ public class GameScene extends PixelScene {
 
 	private SkinnedBlock water;
 	private DungeonTerrainTilemap tiles;
-	private GridTileMap visualGrid;
+    private SurvivalTilemap survivalTiles;
+    private GridTileMap visualGrid;
 	private WallOcclusionTilemap occlusion;
 	private TerrainFeaturesTilemap terrainFeatures;
 	private RaisedTerrainTilemap raisedTerrain;
@@ -280,9 +282,12 @@ public class GameScene extends PixelScene {
 		DungeonTileSheet.setupVariance(Dungeon.level.map.length, Dungeon.seedCurDepth());
 		
 		tiles = new DungeonTerrainTilemap();
-		terrain.add( tiles );
+        terrain.add( tiles );
 
-		customTiles = new Group();
+        survivalTiles = new SurvivalTilemap();
+        terrain.add( survivalTiles );
+
+        customTiles = new Group();
 		terrain.add(customTiles);
 
 		visualGrid = new GridTileMap();
