@@ -14,8 +14,8 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 
 public class SurvivalTestLevel extends Level {
 
-    private static final int MAP_WIDTH = 32;
-    private static final int MAP_HEIGHT = 22;
+    private static final int MAP_WIDTH = 96;
+    private static final int MAP_HEIGHT = 64;
 
     {
         color1 = 0x59635A;
@@ -43,7 +43,7 @@ public class SurvivalTestLevel extends Level {
          *
          * Leave a solid wall border around the entire test level.
          */
-        fillRect(1, 1, 30, 20, Terrain.EMPTY);
+        fillRect(1, 1, MAP_WIDTH - 2, MAP_HEIGHT - 2, Terrain.EMPTY);
 
         /*
          * HOUSE
