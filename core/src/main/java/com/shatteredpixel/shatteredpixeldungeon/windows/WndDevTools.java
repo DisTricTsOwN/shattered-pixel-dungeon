@@ -90,7 +90,6 @@ public class WndDevTools extends Window {
         for (int i = 0; i < length; i++) {
             if (Dungeon.level.discoverable[i]) {
                 Dungeon.level.mapped[i] = true;
-                Dungeon.level.discover(i);
             }
         }
 

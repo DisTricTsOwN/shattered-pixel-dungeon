@@ -29,16 +29,21 @@ public class SurvivalTilemap extends Tilemap {
 
     private void buildMap() {
 
-        if (Dungeon.level == null) {
-            return;
-        }
-
-        int[] visualMap = new int[Dungeon.level.map.length];
-
-        for (int i = 0; i < visualMap.length; i++) {
-            visualMap[i] = FLOOR_TILE;
-        }
-
-        map(visualMap, Dungeon.level.width());
+    if (Dungeon.level == null) {
+        return;
     }
+
+    int[] visualMap = new int[Dungeon.level.map.length];
+
+    for (int i = 0; i < visualMap.length; i++) {
+
+        if (Dungeon.level.passable[i]) {
+            visualMap[i] = FLOOR_TILE;
+        } else {
+            visualMap[i] = -1;
+        }
+    }
+
+    map(visualMap, Dungeon.level.width());
+}
 }

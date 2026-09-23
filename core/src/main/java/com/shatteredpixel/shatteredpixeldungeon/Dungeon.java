@@ -54,6 +54,10 @@ import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfRegrowth;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfWarding;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Notes;
+
+import com.shatteredpixel.shatteredpixeldungeon.levels.SurvivalTestLevel;
+import com.shatteredpixel.shatteredpixeldungeon.devtools.DevTools;
+
 import com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CavesLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel;
@@ -300,8 +304,16 @@ public class Dungeon {
 		Actor.clear();
 		
 		Level level;
-		if (branch == 0) {
-			switch (depth) {
+
+// Developer survival prototype.
+// Load the handcrafted survival map instead of the normal first sewer level.
+if (DevTools.isEnabled() && branch == 0 && depth == 1) {
+
+    level = new SurvivalTestLevel();
+
+} else if (branch == 0) {
+
+    switch (depth) {
 				case 1:
 				case 2:
 				case 3:
