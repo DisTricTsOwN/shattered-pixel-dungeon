@@ -13,6 +13,7 @@ package com.shatteredpixel.shatteredpixeldungeon.sprites;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalMovement;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalVisuals;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.TextureFilm;
@@ -67,6 +68,24 @@ public class SurvivorSprite extends HeroSprite {
                                 - height()
                                 - csize * perspectiveRaise
                 )
+        );
+    }
+        @Override
+    public void update() {
+        super.update();
+
+        PointF position = SurvivalMovement.position();
+
+        x = PixelScene.align(
+                Camera.main,
+                position.x - width() * 0.5f
+        );
+
+        y = PixelScene.align(
+                Camera.main,
+                position.y
+                        - height()
+                        - SurvivalVisuals.CELL_SIZE * perspectiveRaise
         );
     }
 }

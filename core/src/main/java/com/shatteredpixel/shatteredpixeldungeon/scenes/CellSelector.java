@@ -29,6 +29,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalMovement;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalVisuals;
 import com.watabou.noosa.Visual;
@@ -346,9 +347,12 @@ private int screenToCell( int x, int y ) {
 				//move from the action immediately if it was being delayed
 				// and another key wasn't recently released
 				if (heldDelay > 0f && !delayingForRelease){
-					heldDelay = 0f;
-					moveFromActions(action, heldAction1, heldAction2);
-				}
+                        heldDelay = 0f;
+
+                        if (!survivalCoordinates) {
+                                moveFromActions(action, heldAction1, heldAction2);
+                        }
+                }
 
 				if (heldAction1 == GameAction.NONE && heldAction2 == GameAction.NONE) {
 					resetKeyHold();
@@ -390,6 +394,25 @@ private int screenToCell( int x, int y ) {
 	public void update() {
 		super.update();
 
+if (survivalCoordinates && Dungeon.hero != null
+        && !GameScene.interfaceBlockingHero()) {
+
+        Point direction = new Point();
+
+        if (heldAction1 != SPDAction.NONE) {
+                direction.offset(directionFromAction(heldAction1));
+        }
+
+        if (heldAction2 != SPDAction.NONE) {
+                direction.offset(directionFromAction(heldAction2));
+        }
+
+        SurvivalMovement.move(
+                GameMath.gate(-1, direction.x, 1),
+                GameMath.gate(-1, direction.y, 1),
+                Game.elapsed
+        );
+}
 		GameAction newLeftStick = actionFromStick(ControllerHandler.leftStickPosition.x,
 				ControllerHandler.leftStickPosition.y);
 
@@ -496,6 +519,9 @@ private int screenToCell( int x, int y ) {
 	}
 
 	public void processKeyHold() {
+		        if (survivalCoordinates) {
+                return;
+        }
 		//prioritize moving by controller stick over moving via keys
 		if (!directionFromAction(leftStickAction).isZero() && heldDelay < 0) {
 			enabled = Dungeon.hero.ready = true;
