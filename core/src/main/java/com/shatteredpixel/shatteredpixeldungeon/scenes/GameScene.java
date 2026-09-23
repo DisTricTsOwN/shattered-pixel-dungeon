@@ -22,6 +22,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.scenes;
 
 import com.shatteredpixel.shatteredpixeldungeon.sprites.SurvivorSprite;
+import com.shatteredpixel.shatteredpixeldungeon.levels.SurvivalTestLevel;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Badges;
@@ -255,6 +256,8 @@ public class GameScene extends PixelScene {
 		terrain = new Group();
 		add( terrain );
 
+		boolean survivalMode = Dungeon.level instanceof SurvivalTestLevel;
+
 		water = new SkinnedBlock(
 			Dungeon.level.width() * DungeonTilemap.SIZE,
 			Dungeon.level.height() * DungeonTilemap.SIZE,
@@ -274,30 +277,42 @@ public class GameScene extends PixelScene {
 			}
 		};
 		water.autoAdjust = true;
-		terrain.add( water );
+		if (!survivalMode) {
+        terrain.add( water );
+}
 
 		ripples = new Group();
 		terrain.add( ripples );
 
 		DungeonTileSheet.setupVariance(Dungeon.level.map.length, Dungeon.seedCurDepth());
 		
+		
 		tiles = new DungeonTerrainTilemap();
-        terrain.add( tiles );
 
+        if (survivalMode) {
         survivalTiles = new SurvivalTilemap();
         terrain.add( survivalTiles );
+        } else {
+        terrain.add( tiles );
+        }
 
         customTiles = new Group();
 		terrain.add(customTiles);
 
 		visualGrid = new GridTileMap();
-		terrain.add( visualGrid );
+		if (!survivalMode) {
+        terrain.add( visualGrid );
+}
 
 		occlusion = new WallOcclusionTilemap();
-		terrain.add( occlusion );
+		if (!survivalMode) {
+        terrain.add( occlusion );
+}
 
 		terrainFeatures = new TerrainFeaturesTilemap(Dungeon.level.plants, Dungeon.level.traps);
-		terrain.add(terrainFeatures);
+		if (!survivalMode) {
+        terrain.add(terrainFeatures);
+}
 
 		customTerrain = new Group();
 		terrain.add(customTerrain);
@@ -334,10 +349,14 @@ public class GameScene extends PixelScene {
 		}
 		
 		raisedTerrain = new RaisedTerrainTilemap();
-		add( raisedTerrain );
+		if (!survivalMode) {
+        add( raisedTerrain );
+}
 
 		walls = new DungeonWallsTilemap();
-		add(walls);
+		if (!survivalMode) {
+        add(walls);
+}
 
 		customWalls = new Group();
 		add(customWalls);
@@ -346,7 +365,9 @@ public class GameScene extends PixelScene {
 		add( levelWallVisuals );
 
 		wallBlocking = new WallBlockingTilemap();
-		add (wallBlocking);
+		if (!survivalMode) {
+        add(wallBlocking);
+}
 
 		add( emitters );
 		add( effects );
@@ -361,7 +382,10 @@ public class GameScene extends PixelScene {
 
 
 		fog = new FogOfWar( Dungeon.level.width(), Dungeon.level.height() );
-		add( fog );
+
+        if (!survivalMode) {
+        add( fog );
+        }
 
 		spells = new Group();
 		add( spells );
@@ -400,7 +424,9 @@ public class GameScene extends PixelScene {
 		
 		add( emoicons );
 		
-		add( cellSelector = new CellSelector( tiles ) );
+		add( cellSelector = new CellSelector(
+        survivalMode ? survivalTiles : tiles
+) );
 
 		int uiSize = SPDSettings.interfaceSize();
 

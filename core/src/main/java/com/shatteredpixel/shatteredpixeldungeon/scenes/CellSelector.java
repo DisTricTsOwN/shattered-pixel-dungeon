@@ -29,6 +29,9 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalVisuals;
+import com.watabou.noosa.Visual;
 import com.watabou.input.ControllerHandler;
 import com.watabou.input.GameAction;
 import com.watabou.input.KeyBindings;
@@ -51,16 +54,48 @@ public class CellSelector extends ScrollArea {
 	
 	private float dragThreshold;
 	
-	public CellSelector( DungeonTilemap map ) {
-		super( map );
-		camera = map.camera();
-		
-		dragThreshold = PixelScene.defaultZoom * DungeonTilemap.SIZE / 2;
-		
-		mouseZoom = camera.zoom;
-		KeyEvent.addKeyListener( keyListener );
-	}
-	
+	private final boolean survivalCoordinates;
+
+public CellSelector( Visual map ) {
+        super( map );
+        camera = map.camera();
+
+        survivalCoordinates = map instanceof SurvivalTilemap;
+
+        int cellSize = survivalCoordinates
+                ? SurvivalVisuals.CELL_SIZE
+                : DungeonTilemap.SIZE;
+
+        dragThreshold = PixelScene.defaultZoom * cellSize / 2;
+
+        mouseZoom = camera.zoom;
+        KeyEvent.addKeyListener( keyListener );
+}
+	private PointF cellCenterToWorld( int cell ) {
+        if (survivalCoordinates) {
+                return SurvivalVisuals.cellCenterToWorld(cell);
+        }
+
+        return DungeonTilemap.tileCenterToWorld(cell);
+}
+
+private int screenToCell( int x, int y ) {
+
+        if (!survivalCoordinates) {
+                return ((DungeonTilemap) target).screenToTile(x, y, true);
+        }
+
+        PointF p = camera.screenToCamera(x, y)
+                .offset(target.point().negate());
+
+        float worldWidth = Dungeon.level.width() * SurvivalVisuals.CELL_SIZE;
+        float worldHeight = Dungeon.level.height() * SurvivalVisuals.CELL_SIZE;
+
+        p.x = GameMath.gate(0, p.x, worldWidth - 0.001f);
+        p.y = GameMath.gate(0, p.y, worldHeight - 0.001f);
+
+        return SurvivalVisuals.worldToCell(p.x, p.y);
+}
 	private float mouseZoom;
 	
 	@Override
@@ -90,7 +125,7 @@ public class CellSelector extends ScrollArea {
 
 			//hero first
 			if (Dungeon.hero.sprite != null && Dungeon.hero.sprite.overlapsPoint( p.x, p.y )){
-				PointF c = DungeonTilemap.tileCenterToWorld(Dungeon.hero.pos);
+				PointF c = cellCenterToWorld(Dungeon.hero.pos);
 				if (Math.abs(p.x - c.x) <= 12 && Math.abs(p.y - c.y) <= 12) {
 					select(Dungeon.hero.pos, event.button);
 					return;
@@ -100,7 +135,7 @@ public class CellSelector extends ScrollArea {
 			//then mobs
 			for (Char mob : Dungeon.level.mobs.toArray(new Mob[0])){
 				if (mob.sprite != null && mob.sprite.overlapsPoint( p.x, p.y )){
-					PointF c = DungeonTilemap.tileCenterToWorld(mob.pos);
+					PointF c = cellCenterToWorld(mob.pos);
 					if (Math.abs(p.x - c.x) <= 12 && Math.abs(p.y - c.y) <= 12) {
 						select(mob.pos, event.button);
 						return;
@@ -111,7 +146,7 @@ public class CellSelector extends ScrollArea {
 			//then heaps
 			for (Heap heap : Dungeon.level.heaps.valueList()){
 				if (heap.sprite != null && heap.sprite.overlapsPoint( p.x, p.y)){
-					PointF c = DungeonTilemap.tileCenterToWorld(heap.pos);
+					PointF c = cellCenterToWorld(heap.pos);
 					if (Math.abs(p.x - c.x) <= 12 && Math.abs(p.y - c.y) <= 12) {
 						select(heap.pos, event.button);
 						return;
@@ -119,10 +154,9 @@ public class CellSelector extends ScrollArea {
 				}
 			}
 			
-			select( ((DungeonTilemap)target).screenToTile(
-				(int) event.current.x,
-				(int) event.current.y,
-					true ), event.button );
+			select( screenToCell(
+        (int) event.current.x,
+        (int) event.current.y ), event.button );
 		}
 	}
 
