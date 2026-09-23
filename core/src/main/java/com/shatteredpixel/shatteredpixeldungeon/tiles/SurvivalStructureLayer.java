@@ -34,11 +34,43 @@ public class SurvivalStructureLayer extends Group {
                 continue;
             }
 
-            addWall(cell);
+            int mapWidth = Dungeon.level.width();
+
+int cellX = cell % mapWidth;
+int cellY = cell / mapWidth;
+
+boolean openNorth = !isBuildingCell(buildingMap, cellX, cellY - 1);
+boolean openSouth = !isBuildingCell(buildingMap, cellX, cellY + 1);
+boolean openWest  = !isBuildingCell(buildingMap, cellX - 1, cellY);
+boolean openEast  = !isBuildingCell(buildingMap, cellX + 1, cellY);
+
+addWall(
+        cell,
+        openNorth,
+        openSouth,
+        openWest,
+        openEast
+);
         }
     }
+private boolean isBuildingCell(int[] buildingMap, int x, int y) {
 
-    private void addWall(int cell) {
+    if (x < 0 || y < 0
+            || x >= Dungeon.level.width()
+            || y >= Dungeon.level.height()) {
+        return false;
+    }
+
+    int cell = x + y * Dungeon.level.width();
+
+    return buildingMap[cell] != SurvivalBuilding.NONE;
+}
+    private void addWall(
+        int cell,
+        boolean openNorth,
+        boolean openSouth,
+        boolean openWest,
+        boolean openEast) {
 
         int mapWidth = Dungeon.level.width();
 
@@ -52,7 +84,13 @@ public class SurvivalStructureLayer extends Group {
          * class is establishing world placement independently from
          * the 32x32 tilemap.
          */
-        Image wall = new Image(Assets.Environment.SURVIVAL_WALL_3Q);
+        // For this test, only render walls whose south/front side
+// is exposed. This lets us verify the front face separately.
+if (!openSouth) {
+    return;
+}
+
+Image wall = new Image(Assets.Environment.SURVIVAL_WALL_3Q);
 
         wall.x = cellX * SurvivalVisuals.CELL_SIZE;
 
