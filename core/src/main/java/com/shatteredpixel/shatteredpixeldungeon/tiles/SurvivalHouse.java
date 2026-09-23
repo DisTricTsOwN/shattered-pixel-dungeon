@@ -5,6 +5,8 @@
 
 package com.shatteredpixel.shatteredpixeldungeon.tiles;
 
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.watabou.noosa.Image;
 import com.watabou.noosa.Group;
 
 public class SurvivalHouse extends Group {
@@ -49,8 +51,34 @@ public class SurvivalHouse extends Group {
          */
         roof = new Group();
         add(roof);
+        buildPrototype();
     }
+private void buildPrototype() {
 
+    Image house = new Image(
+            Assets.Environment.SURVIVAL_HOUSE_DETAILED
+    );
+
+    /*
+     * Temporary first-pass scale.
+     * The source artwork is intentionally high resolution.
+     */
+    house.scale.set(0.25f);
+
+    /*
+     * Anchor the artwork around the existing 10x6-cell
+     * logical house footprint.
+     */
+    house.x = footprintX() - 32;
+
+    house.y =
+            footprintY()
+                    + footprintHeight()
+                    - house.height * house.scale.y
+                    + 32;
+
+    upperStructure.add(house);
+}
     public float footprintX() {
         return HOUSE_X * SurvivalVisuals.CELL_SIZE;
     }

@@ -49,6 +49,8 @@ public class Assets {
 		public static final String TILES_SURVIVAL_BUILDING = "environment/survival_building_tiles.png";
         public static final String SURVIVAL_WALL_3Q =
         "environment/survival_wall_3q.png";
+		public static final String SURVIVAL_HOUSE_DETAILED =
+        "environment/survival_house_detailed.png";
 		public static final String TILES_CAVES_CRYSTAL  = "environment/tiles_caves_crystal.png";
 		public static final String TILES_CAVES_GNOLL    = "environment/tiles_caves_gnoll.png";
 
