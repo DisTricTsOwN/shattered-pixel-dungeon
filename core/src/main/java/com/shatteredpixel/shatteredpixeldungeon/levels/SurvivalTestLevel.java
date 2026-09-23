@@ -144,6 +144,21 @@ fillSurvivalRect(
          * Leave a solid wall border around the entire test level.
          */
         fillRect(1, 1, MAP_WIDTH - 2, MAP_HEIGHT - 2, Terrain.EMPTY);
+        /*
+ * DETAILED HOUSE COLLISION TEST
+ *
+ * First test only:
+ * create a solid section through the main body of the house.
+ */
+for (int y = 4; y <= 7; y++) {
+    for (int x = 5; x <= 12; x++) {
+        setSurvivalHouseCollision(
+                x,
+                y,
+                SurvivalHouseCollision.SOLID
+        );
+    }
+}
 
                 /*
          * HOUSE
