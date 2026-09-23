@@ -22,6 +22,7 @@ public final class SurvivalMovement {
     private static float worldX;
     private static float worldY;
     private static boolean initialized;
+    private static boolean moving;
 
     private SurvivalMovement() {
     }
@@ -46,6 +47,7 @@ public final class SurvivalMovement {
     }
 
     public static void move(float directionX, float directionY, float elapsed) {
+        moving = false;
 
         ensureInitialized();
 
@@ -62,11 +64,26 @@ public final class SurvivalMovement {
             return;
         }
 
+        moving = true;
         directionX /= length;
         directionY /= length;
 
         worldX += directionX * MOVE_SPEED * elapsed;
         worldY += directionY * MOVE_SPEED * elapsed;
+
+        syncHeroCell();
+    }
+        private static void syncHeroCell() {
+
+        if (Dungeon.hero == null || Dungeon.level == null) {
+            return;
+        }
+
+        int cell = SurvivalVisuals.worldToCell(worldX, worldY);
+
+        if (cell != Dungeon.hero.pos) {
+            Dungeon.hero.move(cell, false);
+        }
     }
 
     public static PointF position() {
@@ -83,4 +100,7 @@ public final class SurvivalMovement {
         ensureInitialized();
         return worldY;
     }
+    public static boolean isMoving() {
+    return moving;
+}
 }

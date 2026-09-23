@@ -51,7 +51,7 @@ public class SurvivorSprite extends HeroSprite {
         play( idle );
     }
 
-    @Override
+       @Override
     public PointF worldToCamera( int cell ) {
 
         final int csize = SurvivalVisuals.CELL_SIZE;
@@ -70,7 +70,14 @@ public class SurvivorSprite extends HeroSprite {
                 )
         );
     }
-        @Override
+
+    @Override
+    public void place(int p) {
+        super.place(p);
+        Camera.main.panFollow(this, 20f);
+    }
+
+    @Override
     public void update() {
         super.update();
 
@@ -87,5 +94,9 @@ public class SurvivorSprite extends HeroSprite {
                         - height()
                         - SurvivalVisuals.CELL_SIZE * perspectiveRaise
         );
+        if (SurvivalMovement.isMoving()
+        && Camera.main.followTarget() != this) {
+    Camera.main.panFollow(this, 20f);
+}
     }
 }

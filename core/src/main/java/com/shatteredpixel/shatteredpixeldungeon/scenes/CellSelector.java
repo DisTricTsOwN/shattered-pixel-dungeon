@@ -412,6 +412,18 @@ if (survivalCoordinates && Dungeon.hero != null
                 GameMath.gate(-1, direction.y, 1),
                 Game.elapsed
         );
+		if (direction.x != 0 || direction.y != 0) {
+
+        if (dragging) {
+                dragging = false;
+                Camera.main.snapTo(
+                        Dungeon.hero.sprite.center().x,
+                        Dungeon.hero.sprite.center().y
+                );
+        }
+
+        Camera.main.panFollow(Dungeon.hero.sprite, 20f);
+}
 }
 		GameAction newLeftStick = actionFromStick(ControllerHandler.leftStickPosition.x,
 				ControllerHandler.leftStickPosition.y);
