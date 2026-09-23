@@ -12,6 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTerrain;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalBuilding;
 
 public class SurvivalTestLevel extends Level {
 
@@ -21,6 +22,23 @@ public class SurvivalTestLevel extends Level {
 
 public int[] survivalTerrain() {
     return survivalTerrain;
+}
+private int[] survivalBuilding;
+
+public int[] survivalBuilding() {
+    return survivalBuilding;
+}
+
+private void setSurvivalBuilding(int x, int y, int building) {
+    survivalBuilding[cell(x, y)] = building;
+}
+
+private void fillSurvivalBuildingRect(int x, int y, int w, int h, int building) {
+    for (int yy = y; yy < y + h; yy++) {
+        for (int xx = x; xx < x + w; xx++) {
+            setSurvivalBuilding(xx, yy, building);
+        }
+    }
 }
 
 private void setSurvivalTerrain(int x, int y, int terrain) {
@@ -56,6 +74,7 @@ private void fillSurvivalRect(int x, int y, int w, int h, int terrain) {
 
         setSize(MAP_WIDTH, MAP_HEIGHT);
         survivalTerrain = new int[length()];
+        survivalBuilding = new int[length()];
 
 // Grass is the default outdoor surface.
 for (int i = 0; i < survivalTerrain.length; i++) {
@@ -115,7 +134,7 @@ fillSurvivalRect(
          */
         fillRect(1, 1, MAP_WIDTH - 2, MAP_HEIGHT - 2, Terrain.EMPTY);
 
-        /*
+                /*
          * HOUSE
          *
          * Exterior:
@@ -125,8 +144,27 @@ fillSurvivalRect(
         fillRect(4, 3, 10, 6, Terrain.WALL);
         fillRect(5, 4, 8, 4, Terrain.EMPTY);
 
+        // Survival visual structure.
+        fillSurvivalBuildingRect(
+                4, 3,
+                10, 6,
+                SurvivalBuilding.EXTERIOR_WALL
+        );
+
+        // Interior floor replaces the wall visual inside the structure.
+        fillSurvivalBuildingRect(
+                5, 4,
+                8, 4,
+                SurvivalBuilding.INTERIOR_FLOOR
+        );
+
         // House front door.
         setTerrain(9, 8, Terrain.DOOR);
+        setSurvivalBuilding(9, 8, SurvivalBuilding.DOOR);
+
+        // Front-facing windows.
+        setSurvivalBuilding(6, 8, SurvivalBuilding.WINDOW);
+        setSurvivalBuilding(12, 8, SurvivalBuilding.WINDOW);
 
         /*
          * CONVENIENCE STORE

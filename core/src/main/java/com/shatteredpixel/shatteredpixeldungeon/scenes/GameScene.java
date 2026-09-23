@@ -87,6 +87,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalBuildingTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTileSheet;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonWallsTilemap;
@@ -290,11 +291,20 @@ public class GameScene extends PixelScene {
 		tiles = new DungeonTerrainTilemap();
 
         if (survivalMode) {
-        survivalTiles = new SurvivalTilemap();
-        terrain.add( survivalTiles );
-        } else {
-        terrain.add( tiles );
-        }
+
+    // Ground surface layer.
+    survivalTiles = new SurvivalTilemap();
+    terrain.add(survivalTiles);
+
+    // Building layer rendered above the ground.
+    SurvivalBuildingTilemap survivalBuildings =
+            new SurvivalBuildingTilemap();
+
+    terrain.add(survivalBuildings);
+
+} else {
+    terrain.add(tiles);
+}
 
         customTiles = new Group();
 		terrain.add(customTiles);
