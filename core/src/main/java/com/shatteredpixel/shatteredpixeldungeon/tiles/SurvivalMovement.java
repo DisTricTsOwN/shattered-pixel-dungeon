@@ -5,6 +5,8 @@
 package com.shatteredpixel.shatteredpixeldungeon.tiles;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.Door;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.watabou.utils.PointF;
 
 /**
@@ -68,11 +70,56 @@ public final class SurvivalMovement {
         directionX /= length;
         directionY /= length;
 
-        worldX += directionX * MOVE_SPEED * elapsed;
-        worldY += directionY * MOVE_SPEED * elapsed;
+        float moveX = directionX * MOVE_SPEED * elapsed;
+float moveY = directionY * MOVE_SPEED * elapsed;
+
+float proposedX = worldX + moveX;
+
+if (canOccupy(proposedX, worldY)) {
+    worldX = proposedX;
+}
+
+float proposedY = worldY + moveY;
+
+if (canOccupy(worldX, proposedY)) {
+    worldY = proposedY;
+}
 
         syncHeroCell();
     }
+
+        private static boolean canOccupy(float x, float y) {
+
+    if (Dungeon.level == null) {
+        return false;
+    }
+
+    float worldWidth =
+            Dungeon.level.width() * SurvivalVisuals.CELL_SIZE;
+
+    float worldHeight =
+            (Dungeon.level.length() / Dungeon.level.width())
+                    * SurvivalVisuals.CELL_SIZE;
+
+    if (x < 0f || y < 0f
+            || x >= worldWidth
+            || y >= worldHeight) {
+        return false;
+    }
+
+    int cell = SurvivalVisuals.worldToCell(x, y);
+
+if (cell < 0 || cell >= Dungeon.level.length()) {
+    return false;
+}
+
+if (Dungeon.level.map[cell] == Terrain.DOOR) {
+    Door.enter(cell);
+}
+
+return !Dungeon.level.solid[cell];
+}
+
         private static void syncHeroCell() {
 
         if (Dungeon.hero == null || Dungeon.level == null) {
