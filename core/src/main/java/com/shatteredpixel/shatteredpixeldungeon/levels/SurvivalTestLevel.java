@@ -159,6 +159,31 @@ for (int y = 4; y <= 7; y++) {
         );
     }
 }
+/*
+ * WALKABLE HOUSE INTERIOR TEST
+ *
+ * Carve a smaller walkable area inside the solid house body.
+ */
+for (int y = 5; y <= 6; y++) {
+    for (int x = 6; x <= 11; x++) {
+        setSurvivalHouseCollision(
+                x,
+                y,
+                SurvivalHouseCollision.WALKABLE
+        );
+    }
+}
+
+/*
+ * FRONT DOOR
+ *
+ * Connect the exterior entry position to the interior.
+ */
+setSurvivalHouseCollision(
+        9,
+        7,
+        SurvivalHouseCollision.DOOR
+);
 
                 /*
          * HOUSE
