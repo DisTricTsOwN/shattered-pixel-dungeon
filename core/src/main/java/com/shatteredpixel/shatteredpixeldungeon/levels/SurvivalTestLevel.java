@@ -11,11 +11,29 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Char;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTerrain;
 
 public class SurvivalTestLevel extends Level {
 
     private static final int MAP_WIDTH = 96;
     private static final int MAP_HEIGHT = 64;
+    private int[] survivalTerrain;
+
+public int[] survivalTerrain() {
+    return survivalTerrain;
+}
+
+private void setSurvivalTerrain(int x, int y, int terrain) {
+    survivalTerrain[cell(x, y)] = terrain;
+}
+
+private void fillSurvivalRect(int x, int y, int w, int h, int terrain) {
+    for (int yy = y; yy < y + h; yy++) {
+        for (int xx = x; xx < x + w; xx++) {
+            setSurvivalTerrain(xx, yy, terrain);
+        }
+    }
+}
 
     {
         color1 = 0x59635A;
@@ -37,6 +55,58 @@ public class SurvivalTestLevel extends Level {
     protected boolean build() {
 
         setSize(MAP_WIDTH, MAP_HEIGHT);
+        survivalTerrain = new int[length()];
+
+// Grass is the default outdoor surface.
+for (int i = 0; i < survivalTerrain.length; i++) {
+    survivalTerrain[i] = SurvivalTerrain.GRASS;
+}
+
+// Main east/west road.
+fillSurvivalRect(
+        1, 24,
+        MAP_WIDTH - 2, 12,
+        SurvivalTerrain.ASPHALT
+);
+
+// Main north/south road.
+fillSurvivalRect(
+        42, 1,
+        12, MAP_HEIGHT - 2,
+        SurvivalTerrain.ASPHALT
+);
+
+// Concrete sidewalks alongside the roads.
+fillSurvivalRect(
+        1, 22,
+        MAP_WIDTH - 2, 2,
+        SurvivalTerrain.CONCRETE
+);
+
+fillSurvivalRect(
+        1, 36,
+        MAP_WIDTH - 2, 2,
+        SurvivalTerrain.CONCRETE
+);
+
+fillSurvivalRect(
+        40, 1,
+        2, MAP_HEIGHT - 2,
+        SurvivalTerrain.CONCRETE
+);
+
+fillSurvivalRect(
+        54, 1,
+        2, MAP_HEIGHT - 2,
+        SurvivalTerrain.CONCRETE
+);
+
+// A dirt patch for testing the fourth surface.
+fillSurvivalRect(
+        65, 44,
+        14, 10,
+        SurvivalTerrain.DIRT
+);
 
         /*
          * OUTDOOR PLAYABLE AREA
