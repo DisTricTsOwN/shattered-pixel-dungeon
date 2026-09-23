@@ -13,10 +13,12 @@ import com.watabou.noosa.Tilemap;
 
 public class SurvivalTilemap extends Tilemap {
 
-    public static final int ASPHALT_TILE = 0;
-    public static final int CONCRETE_TILE = 1;
-    public static final int GRASS_TILE = 2;
-    public static final int DIRT_TILE = 3;
+    private static final int VARIANTS_PER_TERRAIN = 4;
+
+    private static final int ASPHALT_START = 0;
+    private static final int CONCRETE_START = 4;
+    private static final int GRASS_START = 8;
+    private static final int DIRT_START = 12;
 
     public SurvivalTilemap() {
         super(
@@ -48,31 +50,33 @@ public class SurvivalTilemap extends Tilemap {
 
             for (int i = 0; i < visualMap.length; i++) {
 
+                int variant = terrainVariant(i);
+
                 switch (survivalTerrain[i]) {
 
                     case SurvivalTerrain.ASPHALT:
-                        visualMap[i] = ASPHALT_TILE;
+                        visualMap[i] = ASPHALT_START + variant;
                         break;
 
                     case SurvivalTerrain.CONCRETE:
-                        visualMap[i] = CONCRETE_TILE;
+                        visualMap[i] = CONCRETE_START + variant;
                         break;
 
                     case SurvivalTerrain.GRASS:
-                        visualMap[i] = GRASS_TILE;
+                        visualMap[i] = GRASS_START + variant;
                         break;
 
                     case SurvivalTerrain.DIRT:
-                        visualMap[i] = DIRT_TILE;
+                        visualMap[i] = DIRT_START + variant;
                         break;
 
                     default:
-                        visualMap[i] = GRASS_TILE;
+                        visualMap[i] = GRASS_START + variant;
                         break;
                 }
 
-                // Keep logically solid cells invisible for now.
-                // Proper survival walls/buildings come later.
+                // Solid logical cells remain visually empty until the
+                // survival wall/building renderer is implemented.
                 if (!Dungeon.level.passable[i]) {
                     visualMap[i] = -1;
                 }
@@ -80,14 +84,32 @@ public class SurvivalTilemap extends Tilemap {
 
         } else {
 
-            // Safe fallback if this renderer is ever created on another level.
             for (int i = 0; i < visualMap.length; i++) {
                 visualMap[i] = Dungeon.level.passable[i]
-                        ? ASPHALT_TILE
+                        ? ASPHALT_START + terrainVariant(i)
                         : -1;
             }
         }
 
         map(visualMap, Dungeon.level.width());
+    }
+
+    /*
+     * Produces a stable visual variant from the cell coordinates.
+     *
+     * This is deterministic:
+     * the same cell always receives the same variant instead of
+     * changing appearance whenever the renderer rebuilds.
+     */
+    private int terrainVariant(int cell) {
+
+        int x = cell % Dungeon.level.width();
+        int y = cell / Dungeon.level.width();
+
+        int hash = x * 73428767
+                ^ y * 912931
+                ^ x * y * 19349663;
+
+        return Math.floorMod(hash, VARIANTS_PER_TERRAIN);
     }
 }
