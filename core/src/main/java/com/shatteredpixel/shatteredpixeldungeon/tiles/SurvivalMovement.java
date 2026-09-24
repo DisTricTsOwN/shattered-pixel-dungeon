@@ -20,7 +20,7 @@ import com.watabou.utils.PointF;
 public final class SurvivalMovement {
 
     private static final float MOVE_SPEED = 96f;
-
+    private static final float COLLISION_HALF_SIZE = 6f;
     private static float worldX;
     private static float worldY;
     private static boolean initialized;
@@ -90,6 +90,23 @@ if (canOccupy(worldX, proposedY)) {
 
         private static boolean canOccupy(float x, float y) {
 
+    return canOccupyPoint(
+            x - COLLISION_HALF_SIZE,
+            y - COLLISION_HALF_SIZE
+    ) && canOccupyPoint(
+            x + COLLISION_HALF_SIZE,
+            y - COLLISION_HALF_SIZE
+    ) && canOccupyPoint(
+            x - COLLISION_HALF_SIZE,
+            y + COLLISION_HALF_SIZE
+    ) && canOccupyPoint(
+            x + COLLISION_HALF_SIZE,
+            y + COLLISION_HALF_SIZE
+    );
+}
+
+private static boolean canOccupyPoint(float x, float y) {
+
     if (Dungeon.level == null) {
         return false;
     }
@@ -109,15 +126,15 @@ if (canOccupy(worldX, proposedY)) {
 
     int cell = SurvivalVisuals.worldToCell(x, y);
 
-if (cell < 0 || cell >= Dungeon.level.length()) {
-    return false;
-}
+    if (cell < 0 || cell >= Dungeon.level.length()) {
+        return false;
+    }
 
-if (Dungeon.level.map[cell] == Terrain.DOOR) {
-    Door.enter(cell);
-}
+    if (Dungeon.level.map[cell] == Terrain.DOOR) {
+        Door.enter(cell);
+    }
 
-return !Dungeon.level.solid[cell];
+    return !Dungeon.level.solid[cell];
 }
 
         private static void syncHeroCell() {
