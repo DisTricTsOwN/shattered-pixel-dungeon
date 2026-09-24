@@ -17,6 +17,38 @@ public class SurvivalHouse extends Group {
     public static final int HOUSE_WIDTH = 10;
     public static final int HOUSE_HEIGHT = 6;
 
+    // Exterior collision perimeter, relative to the house origin.
+// Each entry is one local-space X/Y point around the physical footprint.
+//
+// These points are intentionally independent of the hidden 32px grid.
+// The footprint follows the visible ground-level geometry of the cabin.
+public static final float[][] COLLISION_POLYGON = {
+
+        // Rear-right exterior reference.
+        {345.2f, 80.0f},
+
+        // Right-side / utility exterior.
+        {300.5f, 196.3f},
+
+        // Front-right porch start.
+        {170.1f, 237.4f},
+
+        // Front-right porch end near bush.
+        {135.4f, 220.8f},
+
+        // Front steps, right edge.
+        {97.4f, 226.8f},
+
+        // Front steps, left edge.
+        {35.2f, 197.8f},
+
+        // Left porch exterior.
+        {6.0f, 155.4f},
+
+        // Rear-left exterior.
+        {45.6f, 80.0f}
+};
+
     private final Group lowerStructure;
     private final Group upperStructure;
     private final Group roof;

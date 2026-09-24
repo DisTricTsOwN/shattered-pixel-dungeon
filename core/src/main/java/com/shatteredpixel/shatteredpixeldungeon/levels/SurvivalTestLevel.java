@@ -144,46 +144,46 @@ fillSurvivalRect(
          * Leave a solid wall border around the entire test level.
          */
         fillRect(1, 1, MAP_WIDTH - 2, MAP_HEIGHT - 2, Terrain.EMPTY);
-        /*
- * DETAILED HOUSE COLLISION TEST
- *
- * First test only:
- * create a solid section through the main body of the house.
- */
-for (int y = 4; y <= 7; y++) {
-    for (int x = 5; x <= 12; x++) {
-        setSurvivalHouseCollision(
-                x,
-                y,
-                SurvivalHouseCollision.SOLID
-        );
-    }
-}
-/*
- * WALKABLE HOUSE INTERIOR TEST
- *
- * Carve a smaller walkable area inside the solid house body.
- */
-for (int y = 5; y <= 6; y++) {
-    for (int x = 6; x <= 11; x++) {
-        setSurvivalHouseCollision(
-                x,
-                y,
-                SurvivalHouseCollision.WALKABLE
-        );
-    }
-}
+//         /*
+//  * DETAILED HOUSE COLLISION TEST
+//  *
+//  * First test only:
+//  * create a solid section through the main body of the house.
+//  */
+// for (int y = 4; y <= 7; y++) {
+//     for (int x = 5; x <= 12; x++) {
+//         setSurvivalHouseCollision(
+//                 x,
+//                 y,
+//                 SurvivalHouseCollision.SOLID
+//         );
+//     }
+// }
+// /*
+//  * WALKABLE HOUSE INTERIOR TEST
+//  *
+//  * Carve a smaller walkable area inside the solid house body.
+//  */
+// for (int y = 5; y <= 6; y++) {
+//     for (int x = 6; x <= 11; x++) {
+//         setSurvivalHouseCollision(
+//                 x,
+//                 y,
+//                 SurvivalHouseCollision.WALKABLE
+//         );
+//     }
+// }
 
-/*
- * FRONT DOOR
- *
- * Connect the exterior entry position to the interior.
- */
-setSurvivalHouseCollision(
-        9,
-        7,
-        SurvivalHouseCollision.DOOR
-);
+// /*
+//  * FRONT DOOR
+//  *
+//  * Connect the exterior entry position to the interior.
+//  */
+// setSurvivalHouseCollision(
+//         9,
+//         7,
+//         SurvivalHouseCollision.DOOR
+// );
 
                 /*
          * HOUSE
@@ -192,8 +192,7 @@ setSurvivalHouseCollision(
          * x = 4..13
          * y = 3..8
          */
-        fillRect(4, 3, 10, 6, Terrain.WALL);
-        fillRect(5, 4, 8, 4, Terrain.EMPTY);
+        fillRect(4, 3, 10, 6, Terrain.EMPTY);
 
         // Survival visual structure.
         fillSurvivalBuildingRect(

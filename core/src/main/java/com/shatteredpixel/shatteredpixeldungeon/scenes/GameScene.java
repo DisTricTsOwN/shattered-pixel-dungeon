@@ -87,6 +87,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTilemap;
+
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalBuildingTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalStructureLayer;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalHouse;
@@ -937,6 +938,7 @@ terrain.add(survivalHouse);
 		}
 
 		super.update();
+
 
 		if (notifyDelay > 0) notifyDelay -= Game.elapsed;
 
