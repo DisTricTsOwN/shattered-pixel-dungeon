@@ -87,7 +87,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTilemap;
-
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalGroundDetailLayer;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalBuildingTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalStructureLayer;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalHouse;
@@ -296,13 +296,18 @@ public class GameScene extends PixelScene {
         if (survivalMode) {
 
     // Ground surface layer.
-    survivalTiles = new SurvivalTilemap();
-    terrain.add(survivalTiles);
+survivalTiles = new SurvivalTilemap();
+terrain.add(survivalTiles);
 
-    // Building layer rendered above the ground.
-    SurvivalBuildingTilemap survivalBuildings =
-            new SurvivalBuildingTilemap();
-    terrain.add(survivalBuildings);
+// Large visual details that break up the 32px ground grid.
+SurvivalGroundDetailLayer survivalGroundDetails =
+        new SurvivalGroundDetailLayer();
+terrain.add(survivalGroundDetails);
+
+// Building layer rendered above the ground.
+SurvivalBuildingTilemap survivalBuildings =
+        new SurvivalBuildingTilemap();
+terrain.add(survivalBuildings);
 
     // Structures that can rise vertically above the logical grid.
     SurvivalStructureLayer survivalStructures =
