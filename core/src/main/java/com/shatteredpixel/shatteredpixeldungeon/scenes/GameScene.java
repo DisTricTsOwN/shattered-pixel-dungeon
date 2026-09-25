@@ -87,6 +87,7 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTerrainTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTilemap;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalGroundBaseLayer;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalGroundDetailLayer;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalBuildingTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalStructureLayer;
@@ -298,6 +299,11 @@ public class GameScene extends PixelScene {
     // Ground surface layer.
 survivalTiles = new SurvivalTilemap();
 terrain.add(survivalTiles);
+
+// High-detail natural ground rendered independently of the logical grid.
+SurvivalGroundBaseLayer survivalGroundBase =
+        new SurvivalGroundBaseLayer();
+terrain.add(survivalGroundBase);
 
 // Large visual details that break up the 32px ground grid.
 SurvivalGroundDetailLayer survivalGroundDetails =
