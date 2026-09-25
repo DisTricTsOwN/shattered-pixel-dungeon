@@ -194,27 +194,14 @@ fillSurvivalRect(
          */
         fillRect(4, 3, 10, 6, Terrain.EMPTY);
 
-        // Survival visual structure.
-        fillSurvivalBuildingRect(
-                4, 3,
-                10, 6,
-                SurvivalBuilding.EXTERIOR_WALL
-        );
-
-        // Interior floor replaces the wall visual inside the structure.
-        fillSurvivalBuildingRect(
-                5, 4,
-                8, 4,
-                SurvivalBuilding.INTERIOR_FLOOR
-        );
+        
 
         // House front door.
         setTerrain(9, 8, Terrain.DOOR);
-        setSurvivalBuilding(9, 8, SurvivalBuilding.DOOR);
+        
 
-        // Front-facing windows.
-        setSurvivalBuilding(6, 8, SurvivalBuilding.WINDOW);
-        setSurvivalBuilding(12, 8, SurvivalBuilding.WINDOW);
+        
+       
 
         /*
          * CONVENIENCE STORE
