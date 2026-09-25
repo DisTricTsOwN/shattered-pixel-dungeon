@@ -62,16 +62,18 @@ public class SurvivalTilemap extends Tilemap {
                         visualMap[i] = CONCRETE_START + variant;
                         break;
 
-                    case SurvivalTerrain.GRASS:
-                        visualMap[i] = GRASS_START + variant;
+                                        case SurvivalTerrain.GRASS:
+                        // Grass remains part of the logical terrain map,
+                        // but is rendered by the high-detail ground renderer.
+                        visualMap[i] = -1;
                         break;
 
                     case SurvivalTerrain.DIRT:
                         visualMap[i] = DIRT_START + variant;
                         break;
 
-                    default:
-                        visualMap[i] = GRASS_START + variant;
+                                        default:
+                        visualMap[i] = -1;
                         break;
                 }
 
