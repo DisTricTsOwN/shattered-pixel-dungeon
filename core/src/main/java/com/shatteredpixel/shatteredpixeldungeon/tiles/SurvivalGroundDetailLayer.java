@@ -27,34 +27,66 @@ public class SurvivalGroundDetailLayer extends Group {
             return;
         }
 
-        int mapWidth = Dungeon.level.width();
-int mapHeight = Dungeon.level.height();
-SurvivalTestLevel level = (SurvivalTestLevel) Dungeon.level;
-int[] surfaceMap = level.survivalTerrain();
+                int mapWidth = Dungeon.level.width();
+        int mapHeight = Dungeon.level.height();
 
-for (int y = 2; y < mapHeight - 2; y += 4) {
-    for (int x = 2; x < mapWidth - 2; x += 4) {
-        
+        SurvivalTestLevel level = (SurvivalTestLevel) Dungeon.level;
+        int[] surfaceMap = level.survivalTerrain();
 
+        for (int y = 2; y < mapHeight - 2; y += 4) {
+            for (int x = 2; x < mapWidth - 2; x += 4) {
 
+                int hash = groundHash(x, y);
 
-        int hash = groundHash(x, y);
+                // Leave many areas untouched so the terrain stays natural.
+                if ((hash & 3) != 0) {
+                    continue;
+                }
 
-        // Leave many areas untouched so the terrain stays natural.
-        if ((hash & 3) != 0) {
-            continue;
+                int variant = Math.floorMod(hash, 3);
+
+                float worldX =
+                        x * SurvivalVisuals.CELL_SIZE
+                                + Math.floorMod(hash >> 4, 49) - 24;
+
+                float worldY =
+                        y * SurvivalVisuals.CELL_SIZE
+                                + Math.floorMod(hash >> 10, 49) - 24;
+
+                if (!patchFitsGrass(
+                        variant,
+                        worldX,
+                        worldY,
+                        mapWidth,
+                        mapHeight,
+                        surfaceMap)) {
+                    continue;
+                }
+
+                addLargePatch(variant, worldX, worldY);
+            }
         }
+                // Scatter smaller grass details between the large patches.
+        for (int y = 1; y < mapHeight - 1; y += 3) {
+            for (int x = 1; x < mapWidth - 1; x += 3) {
 
-        int variant = Math.floorMod(hash, 3);
+                int hash = groundHash(x + 317, y + 911);
 
-        float worldX =
-                x * SurvivalVisuals.CELL_SIZE
-                        + Math.floorMod(hash >> 4, 49) - 24;
+                if ((hash & 3) != 0) {
+                    continue;
+                }
 
-        float worldY =
-                y * SurvivalVisuals.CELL_SIZE
-                        + Math.floorMod(hash >> 10, 49) - 24;
-if (!patchFitsGrass(
+                int variant = Math.floorMod(hash, 4);
+
+                float worldX =
+                        x * SurvivalVisuals.CELL_SIZE
+                                + Math.floorMod(hash >> 5, 33) - 16;
+
+                float worldY =
+                        y * SurvivalVisuals.CELL_SIZE
+                                + Math.floorMod(hash >> 11, 33) - 16;
+
+                if (!smallDetailFitsGrass(
         variant,
         worldX,
         worldY,
@@ -63,11 +95,62 @@ if (!patchFitsGrass(
         surfaceMap)) {
     continue;
 }
-        addLargePatch(variant, worldX, worldY);
+
+addSmallDetail(variant, worldX, worldY);
+            }
+        }
     }
-}
+private void addSmallDetail(int variant, float worldX, float worldY) {
+
+    Image detail =
+            new Image(Assets.Environment.SURVIVAL_GROUND_DETAILS);
+
+    switch (variant) {
+
+        case 0:
+            detail.frame(
+                    detail.texture.uvRect(
+                            0, 225,
+                            250, 512
+                    )
+            );
+            break;
+
+        case 1:
+            detail.frame(
+                    detail.texture.uvRect(
+                            250, 225,
+                            500, 512
+                    )
+            );
+            break;
+
+        case 2:
+            detail.frame(
+                    detail.texture.uvRect(
+                            500, 225,
+                            750, 512
+                    )
+            );
+            break;
+
+        default:
+            detail.frame(
+                    detail.texture.uvRect(
+                            750, 225,
+                            1001, 512
+                    )
+            );
+            break;
     }
 
+    detail.scale.set(0.18f);
+
+    detail.x = worldX;
+    detail.y = worldY;
+
+    add(detail);
+}
         private void addLargePatch(int variant, float worldX, float worldY) {
 
         Image patch =
@@ -135,6 +218,63 @@ private boolean patchFitsGrass(
 
     float right = worldX + patchWidth - 0.01f;
     float bottom = worldY + patchHeight - 0.01f;
+
+    int leftCell = (int) Math.floor(
+            worldX / SurvivalVisuals.CELL_SIZE);
+    int rightCell = (int) Math.floor(
+            right / SurvivalVisuals.CELL_SIZE);
+
+    int topCell = (int) Math.floor(
+            worldY / SurvivalVisuals.CELL_SIZE);
+    int bottomCell = (int) Math.floor(
+            bottom / SurvivalVisuals.CELL_SIZE);
+
+    if (leftCell < 0
+            || topCell < 0
+            || rightCell >= mapWidth
+            || bottomCell >= mapHeight) {
+        return false;
+    }
+
+    for (int yy = topCell; yy <= bottomCell; yy++) {
+        for (int xx = leftCell; xx <= rightCell; xx++) {
+
+            int cell = xx + yy * mapWidth;
+
+            if (surfaceMap[cell] != SurvivalTerrain.GRASS) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+private boolean smallDetailFitsGrass(
+        int variant,
+        float worldX,
+        float worldY,
+        int mapWidth,
+        int mapHeight,
+        int[] surfaceMap) {
+
+    float detailWidth;
+
+    switch (variant) {
+        case 0:
+        case 1:
+        case 2:
+            detailWidth = 250f * 0.18f;
+            break;
+
+        default:
+            detailWidth = 251f * 0.18f;
+            break;
+    }
+
+    float detailHeight = 287f * 0.18f;
+
+    float right = worldX + detailWidth - 0.01f;
+    float bottom = worldY + detailHeight - 0.01f;
 
     int leftCell = (int) Math.floor(
             worldX / SurvivalVisuals.CELL_SIZE);
