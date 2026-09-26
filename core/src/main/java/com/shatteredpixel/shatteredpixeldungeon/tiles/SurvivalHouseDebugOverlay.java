@@ -8,6 +8,8 @@ import com.shatteredpixel.shatteredpixeldungeon.devtools.SurvivalHouseCollisionT
 import com.shatteredpixel.shatteredpixeldungeon.devtools.SurvivalHousePropDebug;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.watabou.noosa.BitmapText;
+import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
+import com.watabou.utils.DeviceCompat;
 import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.Group;
 import com.watabou.input.PointerEvent;
@@ -22,7 +24,7 @@ import static com.shatteredpixel.shatteredpixeldungeon.devtools.SurvivalHouseCol
 /** Temporary debugger. F8 switches collision; F9 cycles visual-only prop inspection. */
 public class SurvivalHouseDebugOverlay extends Group {
     private static SurvivalHouseDebugOverlay activeMapper;
-    
+
 
     private static final int POLYGON_COLOR = 0xFFFF40FF;
     private static final int FOOTPRINT_COLOR = 0xFF00FFFF;
@@ -34,10 +36,10 @@ public class SurvivalHouseDebugOverlay extends Group {
 
     private final ColorBlock[] footprint = new ColorBlock[4];
     private final ColorBlock center;
-    private final BitmapText localXLabel;
-    private final BitmapText localYLabel;
-    private final BitmapText collisionLabel;
-    private final BitmapText propStatusLabel;
+    private final RenderedTextBlock localXLabel;
+    private final RenderedTextBlock localYLabel;
+    private final RenderedTextBlock collisionLabel;
+    private final RenderedTextBlock propStatusLabel;
     private final Group[] propGroups = new Group[SurvivalHousePropDebug.FOOTPRINTS.length];
     // 0 = ALL; 1..4 follow the BARREL, AC, TANK, BOARDS definition order.
     private int propSelection = 0;
@@ -69,7 +71,7 @@ private boolean mapperCloseHeld;
 private boolean mapperExportHeld;
 private final ColorBlock mapperCrosshairHorizontal;
 private final ColorBlock mapperCrosshairVertical;
-private final BitmapText mapperStatusLabel;
+private final RenderedTextBlock mapperStatusLabel;
 private Group mapperDrawing = new Group();
 private final ColorBlock mapperNextEdge = new ColorBlock(1, 1, 0xFF80FF80);
 private int selectedVertex = -1;
@@ -113,7 +115,7 @@ private final InputAdapter editCancelInput = new InputAdapter() {
 };
 private final Group helpPanel = new Group();
 private final ColorBlock helpBackground = new ColorBlock(1, 1, 0xEE000000);
-private final List<BitmapText> helpLines = new ArrayList<>();
+private final List<RenderedTextBlock> helpLines = new ArrayList<>();
 private boolean helpHeld;
 
     public SurvivalHouseDebugOverlay() {
@@ -167,13 +169,13 @@ private boolean helpHeld;
 
         positionBackground = new ColorBlock(1, 1, 0xDD000000);
         add(positionBackground);
-        localXLabel = new BitmapText(PixelScene.pixelFont);
-        localYLabel = new BitmapText(PixelScene.pixelFont);
+        localXLabel = PixelScene.renderTextBlock(7);
+        localYLabel = PixelScene.renderTextBlock(7);
         add(localXLabel);
         add(localYLabel);
-        collisionLabel = new BitmapText(PixelScene.pixelFont);
+        collisionLabel = PixelScene.renderTextBlock(7);
         add(collisionLabel);
-        propStatusLabel = new BitmapText(PixelScene.pixelFont);
+        propStatusLabel = PixelScene.renderTextBlock(7);
         propStatusLabel.hardlight(PROP_DEBUG_COLOR & 0xFFFFFF);
         add(propStatusLabel);
         mapperToggleHeld = Gdx.input.isKeyPressed(Input.Keys.F10);
@@ -186,10 +188,10 @@ mapperCrosshairVertical.visible = false;
 add(mapperCrosshairHorizontal);
 add(mapperCrosshairVertical);
 
-mapperStatusLabel = new BitmapText(PixelScene.pixelFont);
+mapperStatusLabel = PixelScene.renderTextBlock(7);
 mapperStatusLabel.hardlight(0xFFFF00);
 mapperStatusLabel.text("Mapper: OFF");
-mapperStatusLabel.measure();
+
 add(mapperStatusLabel);
 add(mapperDrawing);
 mapperNextEdge.visible = false;
@@ -214,8 +216,7 @@ buildHelpPanel();
                 "HOUSE / PROP: separate drafts", "Coordinates: house-local"
         };
         for (String text : lines) {
-            BitmapText label = new BitmapText(text, PixelScene.pixelFont);
-            label.measure();
+            RenderedTextBlock label = PixelScene.renderTextBlock(text, 8);
             helpLines.add(label);
             helpPanel.add(label);
         }
@@ -224,22 +225,20 @@ buildHelpPanel();
 
     private void layoutHelpPanel() {
         float width = 0, height = 0;
-        for (BitmapText line : helpLines) {
-            width = Math.max(width, line.width() / line.scale.x);
-            height += line.height() / line.scale.y + 2;
+        for (RenderedTextBlock line : helpLines) {
+            line.zoom(1f / Math.round(PixelScene.defaultZoom * DeviceCompat.getRealPixelScaleX()));
+            width = Math.max(width, line.width());
+            height += line.height() + 3;
         }
         float scale = Math.min(1f, Math.min((PixelScene.uiCamera.width - 16f) / (width + 8),
                 (PixelScene.uiCamera.height - 16f) / (height + 8)));
-        com.watabou.utils.Point playerScreen = camera().cameraToScreen(SurvivalMovement.x(), SurvivalMovement.y());
-        PointF playerUI = PixelScene.uiCamera.screenToCamera(playerScreen.x, playerScreen.y);
-        float panelX = playerUI.x < PixelScene.uiCamera.width / 2f
-                ? Math.max(4, PixelScene.uiCamera.width - width * scale - 12) : 4;
+        
+        float panelX = 4;
         float y = 8;
-        for (BitmapText line : helpLines) {
-            line.scale.set(scale);
-            line.x = panelX + 4;
-            line.y = y;
-            y += line.height() + 2 * scale;
+        for (RenderedTextBlock line : helpLines) {
+            line.zoom(scale / Math.round(PixelScene.defaultZoom * DeviceCompat.getRealPixelScaleX()));
+            line.setPos(panelX + 4, y);
+            y += line.height() + 3 * scale;
         }
         helpBackground.x = panelX;
         helpBackground.y = 4;
@@ -369,7 +368,7 @@ if (mapperHeld && !mapperToggleHeld) {
     mapperCrosshairVertical.visible = mapperEnabled;
 
     mapperStatusLabel.text(mapperEnabled ? "Mapper: ON" : "Mapper: OFF | " + mapperMode);
-    mapperStatusLabel.measure();
+
 }
 mapperToggleHeld = mapperHeld;
 boolean modeHeld = Gdx.input.isKeyPressed(Input.Keys.F11);
@@ -388,7 +387,7 @@ if (mapperEnabled && clearHeld && !mapperClearHeld) {
     rebuildMapperDrawing();
 
     mapperStatusLabel.text("Mapper: ON | No points");
-    mapperStatusLabel.measure();
+
 }
 mapperClearHeld = clearHeld;
 boolean closeHeld = Gdx.input.isKeyPressed(Input.Keys.C);
@@ -403,7 +402,7 @@ if (mapperEnabled && closeHeld && !mapperCloseHeld) {
                         ? "Mapper: ON | CLOSED"
                         : "Mapper: ON | OPEN"
         );
-        mapperStatusLabel.measure();
+
     }
 }
 mapperCloseHeld = closeHeld;
@@ -585,7 +584,7 @@ private void addMapperPoint(float localX, float localY) {
             localX,
             localY
     ));
-    mapperStatusLabel.measure();
+
 }
 private void exportMapperPoints() {
     System.out.println();
@@ -611,7 +610,7 @@ private void exportMapperPoints() {
     mapperStatusLabel.text(
             "Mapper: ON | EXPORTED | " + mapperDraft().points.size() + " points"
     );
-    mapperStatusLabel.measure();
+
 }
 
 private void undoMapperPoint() {
@@ -635,7 +634,7 @@ private void undoMapperPoint() {
         ));
     }
 
-    mapperStatusLabel.measure();
+
 }
 private void rebuildMapperDrawing() {
     Group previousDrawing = mapperDrawing;
@@ -763,17 +762,13 @@ public void destroy() {
                 : "Mapper: OFF | " + mapperMode + " | F7 Help"
 );
         // Offset beyond the footprint so the center and contact outline remain visible.
-        localXLabel.x = localYLabel.x = right + 6;
-        localXLabel.y = bottom + 6;
-        localYLabel.y = localXLabel.y + localXLabel.height() + 2;
-        collisionLabel.x = localXLabel.x;
-        collisionLabel.y = localYLabel.y + localYLabel.height() + 2;
-        propStatusLabel.x = localXLabel.x;
-        propStatusLabel.y = collisionLabel.y + collisionLabel.height() + 2;
-        mapperStatusLabel.x = localXLabel.x;
-        mapperStatusLabel.y = propStatusLabel.y + propStatusLabel.height() + 2;
-        positionBackground.x = localXLabel.x - 2;
-        positionBackground.y = localXLabel.y - 2;
+        localXLabel.setPos(right + 6, bottom + 6);
+        localYLabel.setPos(localXLabel.left(), localXLabel.bottom() + 2);
+        collisionLabel.setPos(localXLabel.left(), localYLabel.bottom() + 2);
+        propStatusLabel.setPos(localXLabel.left(), collisionLabel.bottom() + 2);
+        mapperStatusLabel.setPos(localXLabel.left(), propStatusLabel.bottom() + 2);
+        positionBackground.x = localXLabel.left() - 2;
+        positionBackground.y = localXLabel.top() - 2;
       positionBackground.size(
         Math.max(
                 Math.max(Math.max(collisionLabel.width(), propStatusLabel.width()),
@@ -790,10 +785,9 @@ public void destroy() {
         super.draw();
     }
 
-    private static void updatePositionLabel(BitmapText label, String text) {
+    private static void updatePositionLabel(RenderedTextBlock label, String text) {
         if (!text.equals(label.text())) {
             label.text(text);
-            label.measure();
         }
     }
 
