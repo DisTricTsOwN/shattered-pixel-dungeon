@@ -493,3 +493,49 @@ while holding LEFT, release buttons in both orders, and verify restored coordina
 unchanged count/closure, and no new point. Then test F10/F11/Delete/C/E during a
 drag and verify no stale movement or edits to the other draft. Right-click without
 an edit should still undo exactly one point.
+
+## Feet Anchor Correction - 2026-09-26
+
+Starting checkpoint: e41a268be (Improve collision debug UI readability).
+The user requested feet-based movement and eventual behind-house occlusion.
+SurvivorSprite placed the frame bottom 12 world pixels above the collision center
+via the inherited perspectiveRaise. Removed that offset in continuous placement
+and aligned cell placement to the cell center as well. The sprite frame's bottom
+center now follows the movement/collision center (subject to pixel alignment).
+Collision polygons, speed, 12x12 footprint, and sliding remain unchanged.
+
+Changed: SurvivorSprite.java and this handoff. core:compileJava, all 19 collision
+checks, and git diff --check passed. Visual validation is still required.
+Rear occlusion is NOT implemented: requested clarification whether provisional
+P7-P8-P0 is the intended rear boundary or a new mapped boundary will be supplied.
+The house is currently drawn before the Survivor, so depth ordering needs a
+separate change once that boundary is specified. No commit or stash operations.
+
+## Provisional Rear Occlusion - 2026-09-26
+
+The user approved P7-P8-P0 as the rendering-only rear boundary for this pass.
+SurvivalHouseOcclusion classifies the continuous house-local feet point: behind
+means above the interpolated P7-P8 or P8-P0 segment and between the endpoint X
+limits. Feet on the chain remain in front until crossing. Outside the endpoint
+span the character stays in front, preserving visibility alongside either wall.
+This uses the existing preview array by reference in both collision modes; no
+coordinates are copied into gameplay or modified.
+
+SurvivalHouse draws normally before the character layer when the feet are in
+front. Behind, it defers its single artwork draw to a draw-only GameScene slot
+immediately after the character layer. The Survivor remains rendered normally;
+the house's actual artwork/alpha supplies occlusion, rather than globally hiding
+the sprite. Returning to the front region restores normal order automatically.
+The house updates once and draws once; debug overlays remain above both.
+
+Changed this turn: SurvivalHouse.java, GameScene.java, DEV_HANDOFF.md.
+Created: SurvivalHouseOcclusion.java and SurvivalHouseOcclusionTest.java.
+The prior uncommitted SurvivorSprite feet correction was left unchanged.
+No collision geometry, speed, sliding, footprint, or artwork placement changes.
+Validation: core:compileJava passed; all 19 collision checks passed; new rear
+classification checks passed using the approved source coordinates, including
+crossing each rear segment and entry/exit across the rear in both directions.
+git diff --check passed; git status --short run. No game launched; visual testing
+is still required in both directions (side grass -> rear -> opposite side).
+Rendering does not change where existing collision permits the feet to walk.
+No commit made; protected stash untouched.

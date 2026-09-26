@@ -204,6 +204,7 @@ public class GameScene extends PixelScene {
 	private Group traps;
 	private Group heaps;
 	private Group mobs;
+    private SurvivalHouse survivalHouse;
 	private Group floorEmitters;
 	private Group emitters;
 	private Group effects;
@@ -323,7 +324,7 @@ terrain.add(survivalBuildings);
     terrain.add(survivalStructures);
 	// Complete survival house renderer.
 // Individual roof/wall components will be added to this object.
-SurvivalHouse survivalHouse =
+survivalHouse =
         new SurvivalHouse();
 
 terrain.add(survivalHouse);
@@ -374,6 +375,16 @@ terrain.add(survivalHouse);
 		
 		mobs = new Group();
 		add( mobs );
+        if (survivalMode) {
+            // House artwork covers the Survivor only after its feet cross the rear chain.
+            // This draw-only slot does not reparent or update the house a second time.
+            add(new Group() {
+                @Override
+                public void draw() {
+                    survivalHouse.drawForeground();
+                }
+            });
+        }
 
 		hero = new SurvivorSprite();
 		hero.place( Dungeon.hero.pos );

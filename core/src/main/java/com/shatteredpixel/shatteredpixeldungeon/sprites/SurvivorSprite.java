@@ -64,9 +64,8 @@ public class SurvivorSprite extends HeroSprite {
                 ),
                 PixelScene.align(
                         Camera.main,
-                        ((cell / Dungeon.level.width()) + 1.0f) * csize
+                        ((cell / Dungeon.level.width()) + 0.5f) * csize
                                 - height()
-                                - csize * perspectiveRaise
                 )
         );
     }
@@ -90,9 +89,10 @@ public class SurvivorSprite extends HeroSprite {
 
         y = PixelScene.align(
                 Camera.main,
+                // The bottom-center of the frame is the feet/ground anchor.
+                // Collision is already centered on position, not on sprite bounds.
                 position.y
                         - height()
-                        - SurvivalVisuals.CELL_SIZE * perspectiveRaise
         );
         if (SurvivalMovement.isMoving()
         && Camera.main.followTarget() != this) {

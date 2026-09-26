@@ -6,6 +6,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.tiles;
 
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
+import com.shatteredpixel.shatteredpixeldungeon.devtools.SurvivalHouseCollisionTest;
 import com.watabou.noosa.Image;
 import com.watabou.noosa.Group;
 
@@ -140,5 +141,22 @@ house.y =
 
     public Group roof() {
         return roof;
+    }
+
+    private boolean survivorBehind() {
+        return SurvivalHouseOcclusion.behind(
+                SurvivalMovement.x() - footprintX(),
+                SurvivalMovement.y() - footprintY(),
+                SurvivalHouseCollisionTest.PREVIEW_POLYGON);
+    }
+
+    @Override
+    public void draw() {
+        if (!survivorBehind()) super.draw();
+    }
+
+    /** Second render slot after characters; the same artwork is drawn exactly once. */
+    public void drawForeground() {
+        if (survivorBehind()) super.draw();
     }
 }
