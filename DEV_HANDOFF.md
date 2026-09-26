@@ -4,8 +4,9 @@
 survival-prototype
 
 ## Current Safe Baseline
-Commit: c2b30a008
-Message: Remove obsolete house tile visuals
+Commit: 3d2481397
+Message: Add collision mapper coordinate export
+Repository was clean at this checkpoint before the mapper-mode changes below.
 
 ## Protected Experimental Work
 A Git stash was created before beginning the Codex workflow.
@@ -90,9 +91,8 @@ Desktop debug:
 Gradle compile is the source of truth. Existing IDE warnings do not necessarily indicate build failure.
 
 ## Next Action
-Connect Codex to this repository and perform a read-only inspection of the right-side exterior house wall movement/collision issue.
-
-Do not edit files during the initial inspection.
+Manually verify HOUSE/PROP draft switching and mode-tagged exports with F10/F11.
+See the latest Mapper Modes entry below; earlier entries record historical work.
 
 ## Temporary Collision Overlay - 2026-09-25
 
@@ -370,3 +370,42 @@ protected stash untouched. Existing endpoint-based movement is not swept collisi
 large frame steps can still tunnel. Toggle outside all shapes during manual tests;
 no new depenetration behavior was added. Next: manually test wall/prop joins,
 small gaps, F8 baseline equivalence, and F9 independence from physical blockers.
+
+## Mapper Modes - 2026-09-26
+
+Starting checkpoint: 3d2481397 (Add collision mapper coordinate export), clean
+survival-prototype branch. The user manually verified F10 activation, zoom-correct
+mouse coordinates, click suppression, point editing, closure, and terminal export
+at that checkpoint. This task supersedes the earlier proposed resolver work;
+CURRENT and PREVIEW physical collision were not edited.
+
+Added HOUSE/PROP modes inside SurvivalHouseDebugOverlay with an enum and an
+EnumMap of independent drafts (points plus closed state). Default mode is HOUSE.
+F11 cycles HOUSE -> PROP -> HOUSE while mapper is ON, once per key press. Switching
+rebuilds only the selected draft drawing; switching back restores its points and
+OPEN/CLOSED state. F10 off/on retains both drafts. Drafts are session-only and
+are discarded with the overlay. Adding a future mode using the same coordinate
+basis requires another enum entry, not changes to the point-editing logic.
+
+Both modes retain the existing house-local coordinate conversion. Mapper drafts
+are authoring data only and never change physical collision or approved geometry.
+Status: Mapper: ON | HOUSE/PROP | OPEN/CLOSED | N points; OFF also shows the mode.
+Exports retain the existing float formatting and now include Mode: HOUSE or PROP.
+
+Controls:
+- F10: mapper ON/OFF (existing master gate and gameplay click suppression).
+- F11: cycle mapper mode while ON; no effect while OFF.
+- Left click: add to active draft; right click: undo active draft.
+- Delete: clear active draft only; C: toggle closure with at least three points.
+- E: export active draft with mode, count, closed state, and house-local points.
+- F8/F9: unchanged collision mode and prop debug filter controls.
+
+Changed this turn: SurvivalHouseDebugOverlay.java and DEV_HANDOFF.md only.
+CellSelector, camera conversion, movement, slideAlongPolygon, footprint size,
+speed, both house polygons, and all approved prop geometry are unchanged.
+Validation: core:compileJava passed; all 19 existing collision overlap checks
+passed; git diff --check passed; git status --short run. No existing automated
+mapper tests were available. No game launched, no commit, protected stash untouched.
+Manual follow-up: create distinct drafts in both modes, switch repeatedly, verify
+point order and closure restoration, undo/clear isolation, mode-tagged exports,
+F10 off/on retention, and zoom/click suppression plus F8/F9 regression behavior.

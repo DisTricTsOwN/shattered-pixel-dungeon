@@ -13,6 +13,7 @@ import com.watabou.utils.PointF;
 import java.util.Locale;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.EnumMap;
 
 import static com.shatteredpixel.shatteredpixeldungeon.devtools.SurvivalHouseCollisionTest.PREVIEW_POLYGON;
 
@@ -41,17 +42,32 @@ public class SurvivalHouseDebugOverlay extends Group {
     private boolean propCycleHeld;
     private boolean toggleHeld;
     private final ColorBlock positionBackground;
-// Interactive collision mapper. F10 toggles mapping mode.
+// Interactive collision mapper. F10 toggles it; F11 cycles independent drafts.
+// Both initial modes use house-local coordinates. Drafts never affect collision.
+private enum MapperMode { HOUSE, PROP }
+private static final class MapperDraft {
+    final List<PointF> points = new ArrayList<>();
+    boolean closed;
+}
+private final EnumMap<MapperMode, MapperDraft> mapperDrafts = new EnumMap<>(MapperMode.class);
+private MapperMode mapperMode = MapperMode.HOUSE;
+private boolean mapperModeHeld;
+private MapperDraft mapperDraft() {
+    MapperDraft draft = mapperDrafts.get(mapperMode);
+    if (draft == null) {
+        draft = new MapperDraft();
+        mapperDrafts.put(mapperMode, draft);
+    }
+    return draft;
+}
 private boolean mapperEnabled;
 private boolean mapperToggleHeld;
 private boolean mapperClearHeld;
 private boolean mapperCloseHeld;
 private boolean mapperExportHeld;
-private boolean mapperClosed;
 private final ColorBlock mapperCrosshairHorizontal;
 private final ColorBlock mapperCrosshairVertical;
 private final BitmapText mapperStatusLabel;
-private final List<PointF> mapperPoints = new ArrayList<>();
 private final Group mapperDrawing = new Group();
 
     public SurvivalHouseDebugOverlay() {
@@ -114,6 +130,7 @@ private final Group mapperDrawing = new Group();
         propStatusLabel.hardlight(PROP_DEBUG_COLOR & 0xFFFFFF);
         add(propStatusLabel);
         mapperToggleHeld = Gdx.input.isKeyPressed(Input.Keys.F10);
+        mapperModeHeld = Gdx.input.isKeyPressed(Input.Keys.F11);
 
 mapperCrosshairHorizontal = new ColorBlock(17, 1, 0xFFFFFF00);
 mapperCrosshairVertical = new ColorBlock(1, 17, 0xFFFFFF00);
@@ -247,14 +264,21 @@ if (mapperHeld && !mapperToggleHeld) {
     mapperCrosshairHorizontal.visible = mapperEnabled;
     mapperCrosshairVertical.visible = mapperEnabled;
 
-    mapperStatusLabel.text(mapperEnabled ? "Mapper: ON" : "Mapper: OFF");
+    mapperStatusLabel.text(mapperEnabled ? "Mapper: ON" : "Mapper: OFF | " + mapperMode);
     mapperStatusLabel.measure();
 }
 mapperToggleHeld = mapperHeld;
+boolean modeHeld = Gdx.input.isKeyPressed(Input.Keys.F11);
+if (mapperEnabled && modeHeld && !mapperModeHeld) {
+    MapperMode[] modes = MapperMode.values();
+    mapperMode = modes[(mapperMode.ordinal() + 1) % modes.length];
+    rebuildMapperDrawing();
+}
+mapperModeHeld = modeHeld;
 boolean clearHeld = Gdx.input.isKeyPressed(Input.Keys.FORWARD_DEL);
 if (mapperEnabled && clearHeld && !mapperClearHeld) {
-    mapperPoints.clear();
-    mapperClosed = false;
+    mapperDraft().points.clear();
+    mapperDraft().closed = false;
     rebuildMapperDrawing();
 
     mapperStatusLabel.text("Mapper: ON | No points");
@@ -263,12 +287,12 @@ if (mapperEnabled && clearHeld && !mapperClearHeld) {
 mapperClearHeld = clearHeld;
 boolean closeHeld = Gdx.input.isKeyPressed(Input.Keys.C);
 if (mapperEnabled && closeHeld && !mapperCloseHeld) {
-    if (mapperPoints.size() >= 3) {
-        mapperClosed = !mapperClosed;
+    if (mapperDraft().points.size() >= 3) {
+        mapperDraft().closed = !mapperDraft().closed;
         rebuildMapperDrawing();
 
         mapperStatusLabel.text(
-                mapperClosed
+                mapperDraft().closed
                         ? "Mapper: ON | CLOSED"
                         : "Mapper: ON | OPEN"
         );
@@ -315,10 +339,10 @@ if (event.button != PointerEvent.LEFT) {
 }
 
 private void addMapperPoint(float localX, float localY) {
-    mapperClosed = false;
+    mapperDraft().closed = false;
 
     PointF point = new PointF(localX, localY);
-    mapperPoints.add(point);
+    mapperDraft().points.add(point);
 
     float originX = SurvivalHouse.HOUSE_X * SurvivalVisuals.CELL_SIZE;
     float originY = SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE;
@@ -331,7 +355,7 @@ private void addMapperPoint(float localX, float localY) {
     marker.y = worldY - 2.5f;
     mapperDrawing.add(marker);
 
-    int index = mapperPoints.size() - 1;
+    int index = mapperDraft().points.size() - 1;
 
     BitmapText label = new BitmapText("P" + index, PixelScene.pixelFont);
     label.hardlight(0xFFFF00);
@@ -340,8 +364,8 @@ private void addMapperPoint(float localX, float localY) {
     label.y = worldY + 5;
     mapperDrawing.add(label);
 
-    if (mapperPoints.size() > 1) {
-        PointF previous = mapperPoints.get(mapperPoints.size() - 2);
+    if (mapperDraft().points.size() > 1) {
+        PointF previous = mapperDraft().points.get(mapperDraft().points.size() - 2);
 
         ColorBlock edge = new ColorBlock(1, 1, 0xFFFFFF00);
         positionLine(
@@ -366,11 +390,12 @@ private void addMapperPoint(float localX, float localY) {
 private void exportMapperPoints() {
     System.out.println();
     System.out.println("=== COLLISION MAPPER EXPORT ===");
-    System.out.println("Points: " + mapperPoints.size());
-    System.out.println("Closed: " + mapperClosed);
+    System.out.println("Mode: " + mapperMode);
+    System.out.println("Points: " + mapperDraft().points.size());
+    System.out.println("Closed: " + mapperDraft().closed);
     System.out.println("{");
 
-    for (PointF point : mapperPoints) {
+    for (PointF point : mapperDraft().points) {
         System.out.println(String.format(
                 Locale.ROOT,
                 "    {%.1ff, %.1ff},",
@@ -384,27 +409,27 @@ private void exportMapperPoints() {
     System.out.println();
 
     mapperStatusLabel.text(
-            "Mapper: ON | EXPORTED | " + mapperPoints.size() + " points"
+            "Mapper: ON | EXPORTED | " + mapperDraft().points.size() + " points"
     );
     mapperStatusLabel.measure();
 }
 
 private void undoMapperPoint() {
-    if (mapperPoints.isEmpty()) {
+    if (mapperDraft().points.isEmpty()) {
         return;
     }
 
-    mapperPoints.remove(mapperPoints.size() - 1);
+    mapperDraft().points.remove(mapperDraft().points.size() - 1);
     rebuildMapperDrawing();
 
-    if (mapperPoints.isEmpty()) {
+    if (mapperDraft().points.isEmpty()) {
         mapperStatusLabel.text("Mapper: ON | No points");
     } else {
-        PointF last = mapperPoints.get(mapperPoints.size() - 1);
+        PointF last = mapperDraft().points.get(mapperDraft().points.size() - 1);
         mapperStatusLabel.text(String.format(
                 Locale.ROOT,
                 "Mapper: ON | P%d (%.1f, %.1f)",
-                mapperPoints.size() - 1,
+                mapperDraft().points.size() - 1,
                 last.x,
                 last.y
         ));
@@ -418,8 +443,8 @@ private void rebuildMapperDrawing() {
     float originX = SurvivalHouse.HOUSE_X * SurvivalVisuals.CELL_SIZE;
     float originY = SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE;
 
-    for (int i = 0; i < mapperPoints.size(); i++) {
-        PointF point = mapperPoints.get(i);
+    for (int i = 0; i < mapperDraft().points.size(); i++) {
+        PointF point = mapperDraft().points.get(i);
 
         float worldX = originX + point.x;
         float worldY = originY + point.y;
@@ -437,7 +462,7 @@ private void rebuildMapperDrawing() {
         mapperDrawing.add(label);
 
         if (i > 0) {
-            PointF previous = mapperPoints.get(i - 1);
+            PointF previous = mapperDraft().points.get(i - 1);
 
             ColorBlock edge = new ColorBlock(1, 1, 0xFFFFFF00);
             positionLine(
@@ -450,9 +475,9 @@ private void rebuildMapperDrawing() {
             mapperDrawing.add(edge);
         }
     }
-    if (mapperClosed && mapperPoints.size() >= 3) {
-    PointF first = mapperPoints.get(0);
-    PointF last = mapperPoints.get(mapperPoints.size() - 1);
+    if (mapperDraft().closed && mapperDraft().points.size() >= 3) {
+    PointF first = mapperDraft().points.get(0);
+    PointF last = mapperDraft().points.get(mapperDraft().points.size() - 1);
 
     ColorBlock closingEdge = new ColorBlock(1, 1, 0xFFFFFF00);
     positionLine(
@@ -517,9 +542,9 @@ public void destroy() {
                 updatePositionLabel(
         mapperStatusLabel,
         mapperEnabled
-                ? "Mapper: ON | " + (mapperClosed ? "CLOSED" : "OPEN")
-                    + " | " + mapperPoints.size() + " points"
-                : "Mapper: OFF"
+                ? "Mapper: ON | " + mapperMode + " | " + (mapperDraft().closed ? "CLOSED" : "OPEN")
+                    + " | " + mapperDraft().points.size() + " points"
+                : "Mapper: OFF | " + mapperMode
 );
         // Offset beyond the footprint so the center and contact outline remain visible.
         localXLabel.x = localYLabel.x = right + 6;
