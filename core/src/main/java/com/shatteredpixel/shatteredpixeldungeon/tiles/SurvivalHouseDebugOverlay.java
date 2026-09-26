@@ -8,13 +8,18 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.watabou.noosa.BitmapText;
 import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.Group;
-
+import com.watabou.input.PointerEvent;
+import com.watabou.utils.PointF;
 import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.shatteredpixel.shatteredpixeldungeon.devtools.SurvivalHouseCollisionTest.PREVIEW_POLYGON;
 
 /** Temporary debugger. F8 switches collision; F9 cycles visual-only prop inspection. */
 public class SurvivalHouseDebugOverlay extends Group {
+    private static SurvivalHouseDebugOverlay activeMapper;
+    
 
     private static final int POLYGON_COLOR = 0xFFFF40FF;
     private static final int FOOTPRINT_COLOR = 0xFF00FFFF;
@@ -36,8 +41,17 @@ public class SurvivalHouseDebugOverlay extends Group {
     private boolean propCycleHeld;
     private boolean toggleHeld;
     private final ColorBlock positionBackground;
+// Interactive collision mapper. F10 toggles mapping mode.
+private boolean mapperEnabled;
+private boolean mapperToggleHeld;
+private final ColorBlock mapperCrosshairHorizontal;
+private final ColorBlock mapperCrosshairVertical;
+private final BitmapText mapperStatusLabel;
+private final List<PointF> mapperPoints = new ArrayList<>();
+private final Group mapperDrawing = new Group();
 
     public SurvivalHouseDebugOverlay() {
+        activeMapper = this;
         SurvivalHouseCollisionTest.reset();
         toggleHeld = Gdx.input.isKeyPressed(Input.Keys.F8);
         propCycleHeld = Gdx.input.isKeyPressed(Input.Keys.F9);
@@ -95,6 +109,21 @@ public class SurvivalHouseDebugOverlay extends Group {
         propStatusLabel = new BitmapText(PixelScene.pixelFont);
         propStatusLabel.hardlight(PROP_DEBUG_COLOR & 0xFFFFFF);
         add(propStatusLabel);
+        mapperToggleHeld = Gdx.input.isKeyPressed(Input.Keys.F10);
+
+mapperCrosshairHorizontal = new ColorBlock(17, 1, 0xFFFFFF00);
+mapperCrosshairVertical = new ColorBlock(1, 17, 0xFFFFFF00);
+mapperCrosshairHorizontal.visible = false;
+mapperCrosshairVertical.visible = false;
+add(mapperCrosshairHorizontal);
+add(mapperCrosshairVertical);
+
+mapperStatusLabel = new BitmapText(PixelScene.pixelFont);
+mapperStatusLabel.hardlight(0xFFFF00);
+mapperStatusLabel.text("Mapper: OFF");
+mapperStatusLabel.measure();
+add(mapperStatusLabel);
+add(mapperDrawing);
     }
 
     private void addPropProposals(float originX, float originY) {
@@ -207,16 +236,116 @@ public class SurvivalHouseDebugOverlay extends Group {
             }
         }
         propCycleHeld = propHeld;
+        boolean mapperHeld = Gdx.input.isKeyPressed(Input.Keys.F10);
+if (mapperHeld && !mapperToggleHeld) {
+    mapperEnabled = !mapperEnabled;
+
+    mapperCrosshairHorizontal.visible = mapperEnabled;
+    mapperCrosshairVertical.visible = mapperEnabled;
+
+    mapperStatusLabel.text(mapperEnabled ? "Mapper: ON" : "Mapper: OFF");
+    mapperStatusLabel.measure();
+}
+mapperToggleHeld = mapperHeld;
+    }
+public static boolean mapperConsumesClicks() {
+    return activeMapper != null && activeMapper.mapperEnabled;
+}
+public static boolean handleMapperClick(PointerEvent event) {
+    if (activeMapper == null || !activeMapper.mapperEnabled) {
+        return false;
     }
 
-    @Override
-    public void destroy() {
-        SurvivalHouseCollisionTest.reset();
-        super.destroy();
+    if (event.button != PointerEvent.LEFT) {
+        return true;
     }
+
+    PointF worldPos = activeMapper.camera().screenToCamera(
+            (int) event.current.x,
+            (int) event.current.y
+    );
+
+    float originX = SurvivalHouse.HOUSE_X * SurvivalVisuals.CELL_SIZE;
+    float originY = SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE;
+
+    float localX = worldPos.x - originX;
+    float localY = worldPos.y - originY;
+
+    activeMapper.addMapperPoint(localX, localY);
+    return true;
+}private void addMapperPoint(float localX, float localY) {
+    PointF point = new PointF(localX, localY);
+    mapperPoints.add(point);
+
+    float originX = SurvivalHouse.HOUSE_X * SurvivalVisuals.CELL_SIZE;
+    float originY = SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE;
+
+    float worldX = originX + localX;
+    float worldY = originY + localY;
+
+    ColorBlock marker = new ColorBlock(5, 5, 0xFFFFFF00);
+    marker.x = worldX - 2.5f;
+    marker.y = worldY - 2.5f;
+    mapperDrawing.add(marker);
+
+    int index = mapperPoints.size() - 1;
+
+    BitmapText label = new BitmapText("P" + index, PixelScene.pixelFont);
+    label.hardlight(0xFFFF00);
+    label.measure();
+    label.x = worldX + 5;
+    label.y = worldY + 5;
+    mapperDrawing.add(label);
+
+    if (mapperPoints.size() > 1) {
+        PointF previous = mapperPoints.get(mapperPoints.size() - 2);
+
+        ColorBlock edge = new ColorBlock(1, 1, 0xFFFFFF00);
+        positionLine(
+                edge,
+                originX + previous.x,
+                originY + previous.y,
+                worldX,
+                worldY
+        );
+        mapperDrawing.add(edge);
+    }
+
+    mapperStatusLabel.text(String.format(
+            Locale.ROOT,
+            "Mapper: ON | P%d (%.1f, %.1f)",
+            index,
+            localX,
+            localY
+    ));
+    mapperStatusLabel.measure();
+}
+    @Override
+public void destroy() {
+    if (activeMapper == this) {
+        activeMapper = null;
+    }
+    SurvivalHouseCollisionTest.reset();
+    super.destroy();
+}
 
     @Override
     public void draw() {
+        if (mapperEnabled) {
+    PointF mousePos = PointerEvent.currentHoverPos();
+
+    if (mousePos != null) {
+        PointF worldPos = camera().screenToCamera(
+                (int) mousePos.x,
+                (int) mousePos.y
+        );
+
+        mapperCrosshairHorizontal.x = worldPos.x - 8;
+        mapperCrosshairHorizontal.y = worldPos.y;
+        mapperCrosshairVertical.x = worldPos.x;
+        mapperCrosshairVertical.y = worldPos.y - 8;
+    }
+}
         // Read after scene updates so the outline uses this frame's resolved position.
         float x = SurvivalMovement.x();
         float y = SurvivalMovement.y();

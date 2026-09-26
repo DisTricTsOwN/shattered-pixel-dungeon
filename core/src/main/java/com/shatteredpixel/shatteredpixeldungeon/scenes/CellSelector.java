@@ -32,6 +32,7 @@ import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalMovement;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalVisuals;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalHouseDebugOverlay;
 import com.watabou.noosa.Visual;
 import com.watabou.input.ControllerHandler;
 import com.watabou.input.GameAction;
@@ -113,6 +114,9 @@ private int screenToCell( int x, int y ) {
 	
 	@Override
 	protected void onClick( PointerEvent event ) {
+		if (SurvivalHouseDebugOverlay.handleMapperClick(event)) {
+        return;
+}
 		if (dragging) {
 			
 			dragging = false;
