@@ -267,6 +267,9 @@ public class Assets {
 		public static final String CITY     = "splashes/city.jpg";
 		public static final String HALLS    = "splashes/halls.jpg";
 
+		public static final String SURVIVAL_TITLE = "splashes/survival/survival_title_master.png";
+		public static final String SURVIVAL_PARTICLES = "splashes/survival/survival_particles.png";
+		public static final String SURVIVAL_ZOMBIE_EYES = "splashes/survival/survival_zombie_eyes.png";
 		public static class Title {
 			public static final String ARCHS         = "splashes/title/archs.png";
 			public static final String BACK_CLUSTERS = "splashes/title/back_clusters.png";
