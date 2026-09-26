@@ -44,6 +44,9 @@ public class SurvivalHouseDebugOverlay extends Group {
 // Interactive collision mapper. F10 toggles mapping mode.
 private boolean mapperEnabled;
 private boolean mapperToggleHeld;
+private boolean mapperClearHeld;
+private boolean mapperCloseHeld;
+private boolean mapperClosed;
 private final ColorBlock mapperCrosshairHorizontal;
 private final ColorBlock mapperCrosshairVertical;
 private final BitmapText mapperStatusLabel;
@@ -247,6 +250,31 @@ if (mapperHeld && !mapperToggleHeld) {
     mapperStatusLabel.measure();
 }
 mapperToggleHeld = mapperHeld;
+boolean clearHeld = Gdx.input.isKeyPressed(Input.Keys.FORWARD_DEL);
+if (mapperEnabled && clearHeld && !mapperClearHeld) {
+    mapperPoints.clear();
+    mapperClosed = false;
+    rebuildMapperDrawing();
+
+    mapperStatusLabel.text("Mapper: ON | No points");
+    mapperStatusLabel.measure();
+}
+mapperClearHeld = clearHeld;
+boolean closeHeld = Gdx.input.isKeyPressed(Input.Keys.C);
+if (mapperEnabled && closeHeld && !mapperCloseHeld) {
+    if (mapperPoints.size() >= 3) {
+        mapperClosed = !mapperClosed;
+        rebuildMapperDrawing();
+
+        mapperStatusLabel.text(
+                mapperClosed
+                        ? "Mapper: ON | CLOSED"
+                        : "Mapper: ON | OPEN"
+        );
+        mapperStatusLabel.measure();
+    }
+}
+mapperCloseHeld = closeHeld;
     }
 public static boolean mapperConsumesClicks() {
     return activeMapper != null && activeMapper.mapperEnabled;
@@ -256,9 +284,14 @@ public static boolean handleMapperClick(PointerEvent event) {
         return false;
     }
 
-    if (event.button != PointerEvent.LEFT) {
-        return true;
-    }
+    if (event.button == PointerEvent.RIGHT) {
+    activeMapper.undoMapperPoint();
+    return true;
+}
+
+if (event.button != PointerEvent.LEFT) {
+    return true;
+}
 
     PointF worldPos = activeMapper.camera().screenToCamera(
             (int) event.current.x,
@@ -273,7 +306,11 @@ public static boolean handleMapperClick(PointerEvent event) {
 
     activeMapper.addMapperPoint(localX, localY);
     return true;
-}private void addMapperPoint(float localX, float localY) {
+}
+
+private void addMapperPoint(float localX, float localY) {
+    mapperClosed = false;
+
     PointF point = new PointF(localX, localY);
     mapperPoints.add(point);
 
@@ -319,6 +356,82 @@ public static boolean handleMapperClick(PointerEvent event) {
             localY
     ));
     mapperStatusLabel.measure();
+}
+private void undoMapperPoint() {
+    if (mapperPoints.isEmpty()) {
+        return;
+    }
+
+    mapperPoints.remove(mapperPoints.size() - 1);
+    rebuildMapperDrawing();
+
+    if (mapperPoints.isEmpty()) {
+        mapperStatusLabel.text("Mapper: ON | No points");
+    } else {
+        PointF last = mapperPoints.get(mapperPoints.size() - 1);
+        mapperStatusLabel.text(String.format(
+                Locale.ROOT,
+                "Mapper: ON | P%d (%.1f, %.1f)",
+                mapperPoints.size() - 1,
+                last.x,
+                last.y
+        ));
+    }
+
+    mapperStatusLabel.measure();
+}
+private void rebuildMapperDrawing() {
+    mapperDrawing.clear();
+
+    float originX = SurvivalHouse.HOUSE_X * SurvivalVisuals.CELL_SIZE;
+    float originY = SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE;
+
+    for (int i = 0; i < mapperPoints.size(); i++) {
+        PointF point = mapperPoints.get(i);
+
+        float worldX = originX + point.x;
+        float worldY = originY + point.y;
+
+        ColorBlock marker = new ColorBlock(5, 5, 0xFFFFFF00);
+        marker.x = worldX - 2.5f;
+        marker.y = worldY - 2.5f;
+        mapperDrawing.add(marker);
+
+        BitmapText label = new BitmapText("P" + i, PixelScene.pixelFont);
+        label.hardlight(0xFFFF00);
+        label.measure();
+        label.x = worldX + 5;
+        label.y = worldY + 5;
+        mapperDrawing.add(label);
+
+        if (i > 0) {
+            PointF previous = mapperPoints.get(i - 1);
+
+            ColorBlock edge = new ColorBlock(1, 1, 0xFFFFFF00);
+            positionLine(
+                    edge,
+                    originX + previous.x,
+                    originY + previous.y,
+                    worldX,
+                    worldY
+            );
+            mapperDrawing.add(edge);
+        }
+    }
+    if (mapperClosed && mapperPoints.size() >= 3) {
+    PointF first = mapperPoints.get(0);
+    PointF last = mapperPoints.get(mapperPoints.size() - 1);
+
+    ColorBlock closingEdge = new ColorBlock(1, 1, 0xFFFFFF00);
+    positionLine(
+            closingEdge,
+            originX + last.x,
+            originY + last.y,
+            originX + first.x,
+            originY + first.y
+    );
+    mapperDrawing.add(closingEdge);
+}
 }
     @Override
 public void destroy() {
@@ -369,6 +482,13 @@ public void destroy() {
                 : SurvivalHousePropDebug.FOOTPRINTS[propSelection - 1].name;
         updatePositionLabel(propStatusLabel, "Prop Debug: " + propName
                 + (SurvivalHouseCollisionTest.isPreview() ? " (ALL PHYSICAL)" : " (VISUAL ONLY)"));
+                updatePositionLabel(
+        mapperStatusLabel,
+        mapperEnabled
+                ? "Mapper: ON | " + (mapperClosed ? "CLOSED" : "OPEN")
+                    + " | " + mapperPoints.size() + " points"
+                : "Mapper: OFF"
+);
         // Offset beyond the footprint so the center and contact outline remain visible.
         localXLabel.x = localYLabel.x = right + 6;
         localXLabel.y = bottom + 6;
@@ -377,12 +497,23 @@ public void destroy() {
         collisionLabel.y = localYLabel.y + localYLabel.height() + 2;
         propStatusLabel.x = localXLabel.x;
         propStatusLabel.y = collisionLabel.y + collisionLabel.height() + 2;
+        mapperStatusLabel.x = localXLabel.x;
+        mapperStatusLabel.y = propStatusLabel.y + propStatusLabel.height() + 2;
         positionBackground.x = localXLabel.x - 2;
         positionBackground.y = localXLabel.y - 2;
-        positionBackground.size(Math.max(Math.max(collisionLabel.width(), propStatusLabel.width()),
-                Math.max(localXLabel.width(), localYLabel.width())) + 4,
-                localXLabel.height() + localYLabel.height() + collisionLabel.height()
-                        + propStatusLabel.height() + 10);
+      positionBackground.size(
+        Math.max(
+                Math.max(Math.max(collisionLabel.width(), propStatusLabel.width()),
+                        Math.max(localXLabel.width(), localYLabel.width())),
+                mapperStatusLabel.width()
+        ) + 4,
+        localXLabel.height()
+                + localYLabel.height()
+                + collisionLabel.height()
+                + propStatusLabel.height()
+                + mapperStatusLabel.height()
+                + 12
+);
         super.draw();
     }
 
