@@ -2,6 +2,8 @@ package com.shatteredpixel.shatteredpixeldungeon.tiles;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
+import com.watabou.noosa.Game;
 import com.shatteredpixel.shatteredpixeldungeon.devtools.SurvivalHouseCollisionTest;
 import com.shatteredpixel.shatteredpixeldungeon.devtools.SurvivalHousePropDebug;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
@@ -68,10 +70,55 @@ private boolean mapperExportHeld;
 private final ColorBlock mapperCrosshairHorizontal;
 private final ColorBlock mapperCrosshairVertical;
 private final BitmapText mapperStatusLabel;
-private final Group mapperDrawing = new Group();
+private Group mapperDrawing = new Group();
+private final ColorBlock mapperNextEdge = new ColorBlock(1, 1, 0xFF80FF80);
+private int selectedVertex = -1;
+private PointF editOriginal;
+private PointerEvent editGesture;
+private PointerEvent cancelEditClick;
+private boolean rawEditPressed;
+private boolean cancelEditRequested;
+private boolean cancelRightCaptured;
+// PointerEvent coalesces buttons sharing a pointer ID. Consume edit cancellation
+// before that layer can mistake RIGHT up for the active LEFT gesture's release.
+private final InputAdapter editCancelInput = new InputAdapter() {
+    @Override
+    public boolean touchDown(int x, int y, int pointer, int button) {
+        if (mapperEnabled && button == Input.Buttons.LEFT
+                && (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)
+                || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT))) rawEditPressed = true;
+        if (mapperEnabled && button == Input.Buttons.RIGHT
+                && (rawEditPressed || editGesture != null)) {
+            cancelRightCaptured = true;
+            cancelEditRequested = true;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean touchUp(int x, int y, int pointer, int button) {
+        if (button == Input.Buttons.LEFT) rawEditPressed = false;
+        if (button == Input.Buttons.RIGHT && cancelRightCaptured) {
+            cancelRightCaptured = false;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean touchCancelled(int x, int y, int pointer, int button) {
+        return touchUp(x, y, pointer, button);
+    }
+};
+private final Group helpPanel = new Group();
+private final ColorBlock helpBackground = new ColorBlock(1, 1, 0xEE000000);
+private final List<BitmapText> helpLines = new ArrayList<>();
+private boolean helpHeld;
 
     public SurvivalHouseDebugOverlay() {
         activeMapper = this;
+        Game.inputHandler.addInputProcessor(editCancelInput);
         SurvivalHouseCollisionTest.reset();
         toggleHeld = Gdx.input.isKeyPressed(Input.Keys.F8);
         propCycleHeld = Gdx.input.isKeyPressed(Input.Keys.F9);
@@ -145,6 +192,58 @@ mapperStatusLabel.text("Mapper: OFF");
 mapperStatusLabel.measure();
 add(mapperStatusLabel);
 add(mapperDrawing);
+mapperNextEdge.visible = false;
+mapperNextEdge.alpha(0.55f);
+add(mapperNextEdge);
+helpHeld = Gdx.input.isKeyPressed(Input.Keys.F7);
+buildHelpPanel();
+    }
+
+    private void buildHelpPanel() {
+        helpPanel.camera = PixelScene.uiCamera;
+        helpPanel.visible = false;
+        helpPanel.add(helpBackground);
+        String[] lines = {
+                "COLLISION DEBUG  [F7 hide/show]",
+                "F8  Current / Preview", "F9  Prop Debug Filter",
+                "F10 Mapper On / Off", "F11 Mode: House / Prop",
+                "MAPPER", "Left Click: Add Point", "Right Click: Undo Last Point",
+                "Shift + Left Drag: Move Vertex", "Release: Commit Move",
+                "Right Click during edit: Cancel", "Delete: Clear Active Draft",
+                "C: Open / Close Polygon", "E: Export Coordinates",
+                "HOUSE / PROP: separate drafts", "Coordinates: house-local"
+        };
+        for (String text : lines) {
+            BitmapText label = new BitmapText(text, PixelScene.pixelFont);
+            label.measure();
+            helpLines.add(label);
+            helpPanel.add(label);
+        }
+        add(helpPanel);
+    }
+
+    private void layoutHelpPanel() {
+        float width = 0, height = 0;
+        for (BitmapText line : helpLines) {
+            width = Math.max(width, line.width() / line.scale.x);
+            height += line.height() / line.scale.y + 2;
+        }
+        float scale = Math.min(1f, Math.min((PixelScene.uiCamera.width - 16f) / (width + 8),
+                (PixelScene.uiCamera.height - 16f) / (height + 8)));
+        com.watabou.utils.Point playerScreen = camera().cameraToScreen(SurvivalMovement.x(), SurvivalMovement.y());
+        PointF playerUI = PixelScene.uiCamera.screenToCamera(playerScreen.x, playerScreen.y);
+        float panelX = playerUI.x < PixelScene.uiCamera.width / 2f
+                ? Math.max(4, PixelScene.uiCamera.width - width * scale - 12) : 4;
+        float y = 8;
+        for (BitmapText line : helpLines) {
+            line.scale.set(scale);
+            line.x = panelX + 4;
+            line.y = y;
+            y += line.height() + 2 * scale;
+        }
+        helpBackground.x = panelX;
+        helpBackground.y = 4;
+        helpBackground.size(width * scale + 8, y - 4 + 4);
     }
 
     private void addPropProposals(float originX, float originY) {
@@ -243,6 +342,10 @@ add(mapperDrawing);
     @Override
     public void update() {
         super.update();
+        applyRequestedEditCancel();
+        boolean helpPressed = Gdx.input.isKeyPressed(Input.Keys.F7);
+        if (helpPressed && !helpHeld) helpPanel.visible = !helpPanel.visible;
+        helpHeld = helpPressed;
         // Rising edge only: holding F8 must not repeatedly switch collision.
         boolean held = Gdx.input.isKeyPressed(Input.Keys.F8);
         if (held && !toggleHeld) {
@@ -259,6 +362,7 @@ add(mapperDrawing);
         propCycleHeld = propHeld;
         boolean mapperHeld = Gdx.input.isKeyPressed(Input.Keys.F10);
 if (mapperHeld && !mapperToggleHeld) {
+    cancelMapperEdit();
     mapperEnabled = !mapperEnabled;
 
     mapperCrosshairHorizontal.visible = mapperEnabled;
@@ -270,6 +374,7 @@ if (mapperHeld && !mapperToggleHeld) {
 mapperToggleHeld = mapperHeld;
 boolean modeHeld = Gdx.input.isKeyPressed(Input.Keys.F11);
 if (mapperEnabled && modeHeld && !mapperModeHeld) {
+    cancelMapperEdit();
     MapperMode[] modes = MapperMode.values();
     mapperMode = modes[(mapperMode.ordinal() + 1) % modes.length];
     rebuildMapperDrawing();
@@ -277,6 +382,7 @@ if (mapperEnabled && modeHeld && !mapperModeHeld) {
 mapperModeHeld = modeHeld;
 boolean clearHeld = Gdx.input.isKeyPressed(Input.Keys.FORWARD_DEL);
 if (mapperEnabled && clearHeld && !mapperClearHeld) {
+    cancelMapperEdit();
     mapperDraft().points.clear();
     mapperDraft().closed = false;
     rebuildMapperDrawing();
@@ -287,6 +393,7 @@ if (mapperEnabled && clearHeld && !mapperClearHeld) {
 mapperClearHeld = clearHeld;
 boolean closeHeld = Gdx.input.isKeyPressed(Input.Keys.C);
 if (mapperEnabled && closeHeld && !mapperCloseHeld) {
+    cancelMapperEdit();
     if (mapperDraft().points.size() >= 3) {
         mapperDraft().closed = !mapperDraft().closed;
         rebuildMapperDrawing();
@@ -302,6 +409,7 @@ if (mapperEnabled && closeHeld && !mapperCloseHeld) {
 mapperCloseHeld = closeHeld;
 boolean exportHeld = Gdx.input.isKeyPressed(Input.Keys.E);
 if (mapperEnabled && exportHeld && !mapperExportHeld) {
+    cancelMapperEdit();
     exportMapperPoints();
 }
 mapperExportHeld = exportHeld;
@@ -309,9 +417,97 @@ mapperExportHeld = exportHeld;
 public static boolean mapperConsumesClicks() {
     return activeMapper != null && activeMapper.mapperEnabled;
 }
+public static void mapperPointerDown(PointerEvent event) {
+    if (!mapperConsumesClicks()) return;
+    SurvivalHouseDebugOverlay mapper = activeMapper;
+    if (mapper.editGesture != null) {
+        if (event.button == PointerEvent.RIGHT) {
+            mapper.cancelEditClick = event;
+            mapper.cancelMapperEdit();
+        }
+        return;
+    }
+    if (event.button != PointerEvent.LEFT || !(Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)
+            || Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT))) return;
+    mapper.editGesture = event; // Even a missed Shift-click must never add a point.
+    PointF local = mapper.mapperLocal(event.current);
+    float radius = 10f / mapper.camera().zoom;
+    float best = radius * radius;
+    for (int i = 0; i < mapper.mapperDraft().points.size(); i++) {
+        PointF p = mapper.mapperDraft().points.get(i);
+        float dx = p.x - local.x, dy = p.y - local.y;
+        float distance = dx * dx + dy * dy;
+        if (distance <= best) {
+            best = distance;
+            mapper.selectedVertex = i;
+        }
+    }
+    if (mapper.selectedVertex >= 0) {
+        mapper.editOriginal = new PointF(mapper.mapperDraft().points.get(mapper.selectedVertex));
+        mapper.rebuildMapperDrawing();
+    }
+}
+
+private PointF mapperLocal(PointF screen) {
+    PointF world = camera().screenToCamera((int) screen.x, (int) screen.y);
+    return new PointF(world.x - SurvivalHouse.HOUSE_X * SurvivalVisuals.CELL_SIZE,
+            world.y - SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE);
+}
+
+public static void mapperPointerDrag(PointerEvent event) {
+    if (activeMapper != null) activeMapper.applyRequestedEditCancel();
+    if (!mapperConsumesClicks() || activeMapper.editGesture != event
+            || activeMapper.selectedVertex < 0) return;
+    PointF local = activeMapper.mapperLocal(event.current);
+    activeMapper.mapperDraft().points.get(activeMapper.selectedVertex).set(local);
+    activeMapper.rebuildMapperDrawing();
+}
+
+public static void mapperPointerUp(PointerEvent event) {
+    if (activeMapper == null) return;
+    SurvivalHouseDebugOverlay mapper = activeMapper;
+    mapper.applyRequestedEditCancel();
+    if (event == mapper.cancelEditClick) {
+        mapper.cancelEditClick = null;
+        return;
+    }
+    if (mapper.editGesture != null) {
+        if (mapper.editGesture != event) return;
+        if (event.type == PointerEvent.Type.CANCEL) mapper.cancelMapperEdit();
+        else mapperPointerDrag(event);
+        mapper.selectedVertex = -1;
+        mapper.editOriginal = null;
+        mapper.editGesture = null;
+        mapper.rebuildMapperDrawing();
+    } else if (event.type != PointerEvent.Type.CANCEL) {
+        handleMapperClick(event);
+    }
+}
+
+private void applyRequestedEditCancel() {
+    if (cancelEditRequested) {
+        cancelMapperEdit();
+        cancelEditRequested = false;
+    }
+}
+
+private void cancelMapperEdit() {
+    if (selectedVertex >= 0 && editOriginal != null) {
+        mapperDraft().points.get(selectedVertex).set(editOriginal);
+    }
+    selectedVertex = -1;
+    editOriginal = null;
+    // Keep the gesture until release, suppressing accidental placement after cancellation.
+    rebuildMapperDrawing();
+}
 public static boolean handleMapperClick(PointerEvent event) {
     if (activeMapper == null || !activeMapper.mapperEnabled) {
         return false;
+    }
+    activeMapper.applyRequestedEditCancel();
+    if (activeMapper.editGesture != null) {
+        if (event.button == PointerEvent.RIGHT) activeMapper.cancelMapperEdit();
+        return true;
     }
 
     if (event.button == PointerEvent.RIGHT) {
@@ -339,6 +535,10 @@ if (event.button != PointerEvent.LEFT) {
 }
 
 private void addMapperPoint(float localX, float localY) {
+    if (mapperDraft().closed) {
+        mapperDraft().closed = false;
+        rebuildMapperDrawing();
+    }
     mapperDraft().closed = false;
 
     PointF point = new PointF(localX, localY);
@@ -438,7 +638,10 @@ private void undoMapperPoint() {
     mapperStatusLabel.measure();
 }
 private void rebuildMapperDrawing() {
-    mapperDrawing.clear();
+    Group previousDrawing = mapperDrawing;
+    mapperDrawing = new Group();
+    replace(previousDrawing, mapperDrawing);
+    previousDrawing.destroy();
 
     float originX = SurvivalHouse.HOUSE_X * SurvivalVisuals.CELL_SIZE;
     float originY = SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE;
@@ -449,9 +652,11 @@ private void rebuildMapperDrawing() {
         float worldX = originX + point.x;
         float worldY = originY + point.y;
 
-        ColorBlock marker = new ColorBlock(5, 5, 0xFFFFFF00);
-        marker.x = worldX - 2.5f;
-        marker.y = worldY - 2.5f;
+        boolean selected = i == selectedVertex;
+        ColorBlock marker = new ColorBlock(selected ? 7 : 5, selected ? 7 : 5,
+                selected ? 0xFF00FFFF : 0xFFFFFF00);
+        marker.x = worldX - (selected ? 3.5f : 2.5f);
+        marker.y = worldY - (selected ? 3.5f : 2.5f);
         mapperDrawing.add(marker);
 
         BitmapText label = new BitmapText("P" + i, PixelScene.pixelFont);
@@ -492,6 +697,7 @@ private void rebuildMapperDrawing() {
 }
     @Override
 public void destroy() {
+    Game.inputHandler.removeInputProcessor(editCancelInput);
     if (activeMapper == this) {
         activeMapper = null;
     }
@@ -501,6 +707,8 @@ public void destroy() {
 
     @Override
     public void draw() {
+        mapperNextEdge.visible = false;
+        if (helpPanel.visible) layoutHelpPanel();
         if (mapperEnabled) {
     PointF mousePos = PointerEvent.currentHoverPos();
 
@@ -514,6 +722,14 @@ public void destroy() {
         mapperCrosshairHorizontal.y = worldPos.y;
         mapperCrosshairVertical.x = worldPos.x;
         mapperCrosshairVertical.y = worldPos.y - 8;
+        if (!mapperDraft().closed && !mapperDraft().points.isEmpty() && editGesture == null) {
+            PointF last = mapperDraft().points.get(mapperDraft().points.size() - 1);
+            positionLine(mapperNextEdge,
+                    SurvivalHouse.HOUSE_X * SurvivalVisuals.CELL_SIZE + last.x,
+                    SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE + last.y,
+                    worldPos.x, worldPos.y);
+            mapperNextEdge.visible = true;
+        }
     }
 }
         // Read after scene updates so the outline uses this frame's resolved position.
@@ -544,7 +760,7 @@ public void destroy() {
         mapperEnabled
                 ? "Mapper: ON | " + mapperMode + " | " + (mapperDraft().closed ? "CLOSED" : "OPEN")
                     + " | " + mapperDraft().points.size() + " points"
-                : "Mapper: OFF | " + mapperMode
+                : "Mapper: OFF | " + mapperMode + " | F7 Help"
 );
         // Offset beyond the footprint so the center and contact outline remain visible.
         localXLabel.x = localYLabel.x = right + 6;

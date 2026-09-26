@@ -114,6 +114,10 @@ private int screenToCell( int x, int y ) {
 	
 	@Override
 	protected void onClick( PointerEvent event ) {
+        if (mapperClickHandled == event) {
+            mapperClickHandled = null;
+            return;
+        }
 		if (SurvivalHouseDebugOverlay.handleMapperClick(event)) {
         return;
 }
@@ -210,12 +214,19 @@ private int screenToCell( int x, int y ) {
 	}
 	
 	private boolean pinching = false;
+    private final java.util.Set<PointerEvent> mapperPointers = new java.util.HashSet<>();
+    private PointerEvent mapperClickHandled;
 	private PointerEvent another;
 	private float startZoom;
 	private float startSpan;
 	
 	@Override
 	protected void onPointerDown( PointerEvent event ) {
+        if (SurvivalHouseDebugOverlay.mapperConsumesClicks()) {
+            mapperPointers.add(event);
+            SurvivalHouseDebugOverlay.mapperPointerDown(event);
+            return;
+        }
 		camera.edgeScroll.set(-1);
 		if (event != curEvent && another == null) {
 					
@@ -239,6 +250,11 @@ private int screenToCell( int x, int y ) {
 	
 	@Override
 	protected void onPointerUp( PointerEvent event ) {
+        if (mapperPointers.remove(event)) {
+            SurvivalHouseDebugOverlay.mapperPointerUp(event);
+            mapperClickHandled = event;
+            return;
+        }
 		camera.edgeScroll.set(1);
 		if (pinching && (event == curEvent || event == another)) {
 			
@@ -260,6 +276,10 @@ private int screenToCell( int x, int y ) {
 	
 	@Override
 	protected void onDrag( PointerEvent event ) {
+        if (mapperPointers.contains(event)) {
+            SurvivalHouseDebugOverlay.mapperPointerDrag(event);
+            return;
+        }
 
 		if (pinching) {
 

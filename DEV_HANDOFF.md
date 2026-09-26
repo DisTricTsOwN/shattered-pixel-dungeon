@@ -4,8 +4,8 @@
 survival-prototype
 
 ## Current Safe Baseline
-Commit: 3d2481397
-Message: Add collision mapper coordinate export
+Commit: ff3b3db02
+Message: Add collision mapper modes
 Repository was clean at this checkpoint before the mapper-mode changes below.
 
 ## Protected Experimental Work
@@ -91,8 +91,8 @@ Desktop debug:
 Gradle compile is the source of truth. Existing IDE warnings do not necessarily indicate build failure.
 
 ## Next Action
-Manually verify HOUSE/PROP draft switching and mode-tagged exports with F10/F11.
-See the latest Mapper Modes entry below; earlier entries record historical work.
+Manually verify mapper vertex dragging, live next-edge preview, and F7 help.
+See the latest Mapper Editing entry below; earlier entries record historical work.
 
 ## Temporary Collision Overlay - 2026-09-25
 
@@ -409,3 +409,87 @@ mapper tests were available. No game launched, no commit, protected stash untouc
 Manual follow-up: create distinct drafts in both modes, switch repeatedly, verify
 point order and closure restoration, undo/clear isolation, mode-tagged exports,
 F10 off/on retention, and zoom/click suppression plus F8/F9 regression behavior.
+
+## Mapper Editing, Live Preview, and Help - 2026-09-26
+
+Started clean on survival-prototype at ff3b3db02 (Add collision mapper modes).
+The user confirmed HOUSE/PROP drafts, closure, export, F10 retention, zoom,
+click suppression, and F8/F9 manually at this checkpoint.
+
+While F10 mapper is ON, Shift + left-drag selects the nearest active-draft vertex
+within 10 screen pixels (world hit radius = 10 / camera zoom). Selected vertices
+have a larger cyan marker. Drag motion updates the existing point and rebuilds
+all connected yellow edges, including a closed polygon's closing edge. Release
+commits; labels/order/closed state remain intact. Right-click during an edit or
+pointer cancellation restores the original position. F10, F11, Delete, and C
+cancel an unfinished move before performing their action. The edit gesture is
+consumed through release so cancellation/missed Shift-clicks cannot place points.
+E cancels an unfinished vertex move before exporting the restored draft.
+
+CellSelector has mapper-only down/drag/up forwarding and consumes the subsequent
+click to avoid duplicate placement. Outside mapper gestures the existing input
+path is unchanged. During mapper gestures mouse dragging does not pan the camera;
+wheel zoom and the existing world conversion remain in use. HOUSE/PROP isolation
+is preserved and no draft edits feed physical collision.
+
+Open drafts with at least one point show a translucent light-green next-edge
+preview from the last point to the world crosshair. It is a separate visual,
+never exported or stored as a point; hidden while OFF, CLOSED, or editing.
+Adding to a previously closed draft removes the old closing edge immediately.
+Drawing rebuilds destroy replaced visuals to avoid accumulating drag allocations.
+
+F7 (unused by existing controls) toggles a compact developer help panel, initially
+hidden. It lists F7/F8/F9/F10/F11, add/undo, Shift-drag/release/cancel, Delete/C/E,
+draft isolation, and house-local coordinates. It uses the UI camera independent
+of world zoom, fits available UI dimensions, and chooses the top corner opposite
+the player to reduce overlap with the status panel. Mapper OFF status advertises F7.
+
+Changed this turn: SurvivalHouseDebugOverlay.java, CellSelector.java, DEV_HANDOFF.md.
+No geometry, collision, movement, speed, footprint, or F8/F9 changes. No game launch,
+no commit, no stash operations. Validation: core:compileJava passed; all 19 existing
+collision overlap checks passed; git diff --check passed; git status --short run.
+There are no existing automated mapper input/rendering tests.
+
+Manual sequence:
+1. F7: verify help readability and hide/show at small/large window sizes and zooms.
+2. F10: place three HOUSE points; verify green last-point-to-cursor preview, then E.
+3. Shift-drag a middle vertex: verify cyan selection, both edges, no extra point,
+   and changed exported coordinate after release.
+4. C: close; drag P0 and the last point and verify the closing edge follows.
+5. During a drag test right-click cancellation, F11 switching, F10 off, and Delete;
+   release afterward and verify no accidental placement or edits to another draft.
+6. In PROP repeat edit/undo/clear; switch back and verify HOUSE isolation.
+7. Test Shift-click misses, open/close preview visibility, multiple zoom levels,
+   F10 off/on retention, normal mouse input while OFF, F8/F9, and all prior visuals.
+
+## Mapper Right-Click Cancellation Fix - 2026-09-26
+
+Manual testing exposed shared mouse-pointer-ID coalescing in PointerEvent:
+a RIGHT down while LEFT is held can be delivered as a drag notification, and
+RIGHT up can terminate the tracked LEFT event. Consequently cancellation in
+the mapper's pointer-down callback is too late/unreliable.
+
+Added an overlay-owned InputAdapter ahead of InputHandler. Only during a mapper
+edit gesture, it consumes RIGHT down and its matching release/cancel before
+PointerEvent coalescing. A pending cancellation is applied before drag updates,
+release/commit, normal click dispatch, or the next overlay update. A raw Shift-left
+press flag also covers presses queued before the mapper receives LEFT down.
+The adapter unregisters when the overlay is destroyed. Normal right-click undo
+outside edit gestures follows the existing path.
+
+Cancellation restores the exact saved vertex, preserves count/order/closure,
+clears selection, and rebuilds edges. The outstanding LEFT gesture is retained
+only for release suppression, not as an active edit; it cannot move/add points.
+F10/F11/Delete/C cancel before acting. E now cancels then exports, rather than
+ignoring export during a drag. No changes to hit radius or ordinary drag motion.
+
+Changed this fix: SurvivalHouseDebugOverlay.java and DEV_HANDOFF.md only;
+CellSelector retains its prior uncommitted mapper hooks unchanged this turn.
+Validation: core:compileJava passed; all 19 collision checks passed;
+git diff --check passed; git status --short run. Input paths reviewed but not
+executed in-game. No game launch, no commit, protected stash untouched.
+Manual retest: drag a middle/first/last point in OPEN and CLOSED drafts; right-click
+while holding LEFT, release buttons in both orders, and verify restored coordinates,
+unchanged count/closure, and no new point. Then test F10/F11/Delete/C/E during a
+drag and verify no stale movement or edits to the other draft. Right-click without
+an edit should still undo exactly one point.
