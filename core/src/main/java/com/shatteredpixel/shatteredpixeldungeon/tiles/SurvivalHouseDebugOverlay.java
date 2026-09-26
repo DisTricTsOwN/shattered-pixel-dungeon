@@ -46,6 +46,7 @@ private boolean mapperEnabled;
 private boolean mapperToggleHeld;
 private boolean mapperClearHeld;
 private boolean mapperCloseHeld;
+private boolean mapperExportHeld;
 private boolean mapperClosed;
 private final ColorBlock mapperCrosshairHorizontal;
 private final ColorBlock mapperCrosshairVertical;
@@ -275,6 +276,11 @@ if (mapperEnabled && closeHeld && !mapperCloseHeld) {
     }
 }
 mapperCloseHeld = closeHeld;
+boolean exportHeld = Gdx.input.isKeyPressed(Input.Keys.E);
+if (mapperEnabled && exportHeld && !mapperExportHeld) {
+    exportMapperPoints();
+}
+mapperExportHeld = exportHeld;
     }
 public static boolean mapperConsumesClicks() {
     return activeMapper != null && activeMapper.mapperEnabled;
@@ -357,6 +363,32 @@ private void addMapperPoint(float localX, float localY) {
     ));
     mapperStatusLabel.measure();
 }
+private void exportMapperPoints() {
+    System.out.println();
+    System.out.println("=== COLLISION MAPPER EXPORT ===");
+    System.out.println("Points: " + mapperPoints.size());
+    System.out.println("Closed: " + mapperClosed);
+    System.out.println("{");
+
+    for (PointF point : mapperPoints) {
+        System.out.println(String.format(
+                Locale.ROOT,
+                "    {%.1ff, %.1ff},",
+                point.x,
+                point.y
+        ));
+    }
+
+    System.out.println("}");
+    System.out.println("=== END EXPORT ===");
+    System.out.println();
+
+    mapperStatusLabel.text(
+            "Mapper: ON | EXPORTED | " + mapperPoints.size() + " points"
+    );
+    mapperStatusLabel.measure();
+}
+
 private void undoMapperPoint() {
     if (mapperPoints.isEmpty()) {
         return;
