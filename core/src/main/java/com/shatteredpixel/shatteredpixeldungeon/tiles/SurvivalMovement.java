@@ -5,6 +5,8 @@
 package com.shatteredpixel.shatteredpixeldungeon.tiles;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.devtools.SurvivalHouseCollisionTest;
+import com.shatteredpixel.shatteredpixeldungeon.devtools.SurvivalHousePropDebug;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.Door;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.watabou.utils.PointF;
@@ -106,8 +108,26 @@ private static PointF resolveMovement(
             moveY,
             SurvivalHouse.HOUSE_X * SurvivalVisuals.CELL_SIZE,
             SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE,
-            SurvivalHouse.COLLISION_POLYGON
+            SurvivalHouseCollisionTest.activePolygon()
     );
+
+    // Preview only: compare each prop's best valid slide with the house candidate.
+    // Strict improvement preserves the house/definition order on ties.
+    if (SurvivalHouseCollisionTest.isPreview()) {
+        float bestProgress = slide == null ? -1f : moveX * slide.x + moveY * slide.y;
+        for (SurvivalHousePropDebug.Footprint prop : SurvivalHousePropDebug.FOOTPRINTS) {
+            PointF candidate = slideAlongPolygon(startX, startY, moveX, moveY,
+                    SurvivalHouse.HOUSE_X * SurvivalVisuals.CELL_SIZE,
+                    SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE, prop.vertices);
+            if (candidate != null) {
+                float progress = moveX * candidate.x + moveY * candidate.y;
+                if (progress > bestProgress) {
+                    slide = candidate;
+                    bestProgress = progress;
+                }
+            }
+        }
+    }
 
     if (slide != null) {
         return slide;
@@ -264,6 +284,18 @@ private static PointF resolveMovement(
 if (hitsDetailedHouse(x, y)) {
     return false;
 }
+    if (SurvivalHouseCollisionTest.isPreview()) {
+        float localX = x - SurvivalHouse.HOUSE_X * SurvivalVisuals.CELL_SIZE;
+        float localY = y - SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE;
+        // Preserve CURRENT's original corner-only house test. In PREVIEW also
+        // catch edge crossings/containment, including the concave porch outline.
+        if (SurvivalPolygonOverlap.boundary(localX, localY, COLLISION_HALF_SIZE,
+                SurvivalHouseCollisionTest.activePolygon())) return false;
+        for (SurvivalHousePropDebug.Footprint prop : SurvivalHousePropDebug.FOOTPRINTS) {
+            if (SurvivalPolygonOverlap.convex(localX, localY, COLLISION_HALF_SIZE,
+                    prop.vertices)) return false;
+        }
+    }
     return canOccupyPoint(
             x - COLLISION_HALF_SIZE,
             y - COLLISION_HALF_SIZE
@@ -286,7 +318,7 @@ private static boolean hitsDetailedHouse(float x, float y) {
     float houseOriginY =
             SurvivalHouse.HOUSE_Y * SurvivalVisuals.CELL_SIZE;
 
-    float[][] polygon = SurvivalHouse.COLLISION_POLYGON;
+    float[][] polygon = SurvivalHouseCollisionTest.activePolygon();
 
     // Test the four corners of the Survivor's 12x12 footprint.
     return pointInsideHouse(

@@ -92,6 +92,8 @@ import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalGroundDetailLayer;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalBuildingTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalStructureLayer;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalHouse;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.SurvivalHouseDebugOverlay;
+import com.shatteredpixel.shatteredpixeldungeon.devtools.DevTools;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTileSheet;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTilemap;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonWallsTilemap;
@@ -461,6 +463,11 @@ terrain.add(survivalHouse);
 		add( cellSelector = new CellSelector(
         survivalMode ? survivalTiles : tiles
 ) );
+
+        // Temporary world-space collision overlay, above the house and Survivor.
+        if (survivalMode && DevTools.isEnabled()) {
+            add(new SurvivalHouseDebugOverlay());
+        }
 
 		int uiSize = SPDSettings.interfaceSize();
 
