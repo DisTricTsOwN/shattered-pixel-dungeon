@@ -21,6 +21,12 @@ import com.watabou.utils.PointF;
 
 public class SurvivorSprite extends HeroSprite {
 
+    private Animation southWalk;
+    private Animation southIdle;
+    private boolean hasMovementSample;
+    private float previousWorldX;
+    private float previousWorldY;
+
     public SurvivorSprite() {
         super();
         updateArmor();
@@ -29,15 +35,28 @@ public class SurvivorSprite extends HeroSprite {
     @Override
     public void updateArmor() {
 
-        texture( Assets.Sprites.SURVIVOR );
+        texture( Assets.Sprites.SURVIVOR_SOUTH_WALK_PRODUCTION_TEST );
 
-        TextureFilm frames = new TextureFilm( texture, 32, 48 );
+        // Keep the 128x192 source at the existing 32x48 world-space bounds.
+        scale.set( 0.25f );
+        TextureFilm frames = new TextureFilm( texture, 128, 192 );
 
         idle = new Animation( 1, true );
         idle.frames( frames, 0 );
 
         run = new Animation( 1, true );
         run.frames( frames, 0 );
+
+        // 8x4 atlas: old static sprite in cell 0, Blender frames 1-31 in cells 1-31.
+        // Frame 32 duplicates frame 1 and is deliberately excluded.
+        southWalk = new Animation( 30, true );
+        southWalk.frames( frames, 1, 2, 3, 4, 5, 6, 7, 8,
+                9, 10, 11, 12, 13, 14, 15, 16,
+                17, 18, 19, 20, 21, 22, 23, 24,
+                25, 26, 27, 28, 29, 30, 31 );
+        southIdle = new Animation( 1, true );
+        southIdle.frames( frames, 1 );
+        hasMovementSample = false;
 
         attack = new Animation( 1, false );
         attack.frames( frames, 0 );
@@ -81,6 +100,7 @@ public class SurvivorSprite extends HeroSprite {
         super.update();
 
         PointF position = SurvivalMovement.position();
+        updateSouthWalk(position);
 
         x = PixelScene.align(
                 Camera.main,
@@ -98,5 +118,33 @@ public class SurvivorSprite extends HeroSprite {
         && Camera.main.followTarget() != this) {
     Camera.main.panFollow(this, 20f);
 }
+    }
+
+    private void updateSouthWalk(PointF position) {
+        float dx = hasMovementSample ? position.x - previousWorldX : 0f;
+        float dy = hasMovementSample ? position.y - previousWorldY : 0f;
+        previousWorldX = position.x;
+        previousWorldY = position.y;
+        hasMovementSample = true;
+
+        // Observe resolved, unrounded movement; input can remain held against a wall.
+        // Leave action/death animations and their completion callbacks alone.
+        if (curAnim != idle && curAnim != run
+                && curAnim != southWalk && curAnim != southIdle) {
+            return;
+        }
+
+        // Only the SOUTH sector (+Y, within 22.5 degrees) has a walk in this test.
+        if (dy > 0.0001f && Math.abs(dx) <= dy * 0.41421356f) {
+            // Use the authored SOUTH view, not the random flip set when linking a hero.
+            flipHorizontal = false;
+            play(southWalk);
+        } else if (Math.abs(dx) > 0.0001f || Math.abs(dy) > 0.0001f) {
+            play(idle);
+        } else if (curAnim == southWalk) {
+            play(southIdle);
+        } else if (curAnim == run) {
+            play(idle);
+        }
     }
 }

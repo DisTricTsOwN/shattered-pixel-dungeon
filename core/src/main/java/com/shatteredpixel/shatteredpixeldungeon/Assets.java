@@ -282,7 +282,9 @@ public class Assets {
 		public static final String ITEMS        = "sprites/items.png";
 		public static final String ITEM_ICONS   = "sprites/item_icons.png";
 
-public static final String SURVIVOR = "sprites/survivor.png";
+public static final String SURVIVOR = "sprites/survivor/body/base_south_test.png";
+		public static final String SURVIVOR_SOUTH_WALK_TEST = "sprites/survivor/body/south_walk_test.png";
+		public static final String SURVIVOR_SOUTH_WALK_PRODUCTION_TEST = "sprites/survivor/body/south_walk_production_test.png";
 
 		public static final String WARRIOR  = "sprites/warrior.png";
 		public static final String MAGE     = "sprites/mage.png";
